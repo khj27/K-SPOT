@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko">
+    <html lang="ko" data-scroll-behavior="smooth">
       <body>
         <a className="skip-link" href="#main-content">본문 바로가기</a>
         <AppChrome><div id="main-content">{children}</div></AppChrome>
