@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
+import { contentThumbnail } from "@/lib/content-thumbnail";
 
 import { exploreTypes } from "@/mocks/explore-data";
 import type { AdminContentSpot } from "@/types/admin-content";
@@ -14,6 +16,9 @@ export function AdminContentForm({ initial }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState(initial?.sourceUrl ?? "");
+  const [imageUrl, setImageUrl] = useState(initial?.imageUrl ?? "");
+  const thumbnail = contentThumbnail(imageUrl, sourceUrl);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,8 +77,9 @@ export function AdminContentForm({ initial }: Props) {
         <div className="admin-form-grid">
           <label><span>출처명 *</span><input name="sourceLabel" defaultValue={initial?.sourceLabel} placeholder="예: 부산영상위원회" required />{field("sourceLabel")}</label>
           <label><span>검수일 *</span><input name="verifiedAt" type="date" defaultValue={initial?.verifiedAt ?? new Date().toISOString().slice(0, 10)} required />{field("verifiedAt")}</label>
-          <label className="admin-field-wide"><span>근거 URL *</span><input name="sourceUrl" type="url" defaultValue={initial?.sourceUrl} required />{field("sourceUrl")}</label>
-          <label className="admin-field-wide"><span>이미지 URL</span><input name="imageUrl" type="url" defaultValue={initial?.imageUrl} />{field("imageUrl")}</label>
+          <label className="admin-field-wide"><span>근거 URL · 유튜브 영상 주소 *</span><input name="sourceUrl" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} required />{field("sourceUrl")}<small>유튜브 영상·공유 링크·Shorts 주소를 넣으면 썸네일이 자동 표시됩니다.</small></label>
+          <label className="admin-field-wide"><span>대표 이미지 또는 유튜브 주소 (선택)</span><input name="imageUrl" type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />{field("imageUrl")}<small>입력하면 근거 URL의 썸네일 대신 사용합니다. 다른 사이트는 이미지 파일 주소를 입력하세요.</small></label>
+          {thumbnail && <div className="admin-field-wide"><p>썸네일 미리보기</p><div className="admin-thumbnail-preview"><ContentThumbnail src={thumbnail} title={initial?.contentTitle ?? "콘텐츠"} /></div></div>}
           <label className="admin-field-wide"><span>이미지 권리 *</span><input name="imageRights" defaultValue={initial?.imageRights} placeholder="예: 한국관광공사 공공누리 제1유형" required />{field("imageRights")}</label>
           <label><span>공개 상태 *</span><select name="status" defaultValue={initial?.status ?? "draft"}><option value="draft">임시 저장</option><option value="published">즉시 공개</option></select>{field("status")}</label>
         </div>

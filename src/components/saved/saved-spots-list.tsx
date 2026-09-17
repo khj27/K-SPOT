@@ -1,22 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { AppIcon } from "@/components/common/app-icon";
-import { exploreContents } from "@/mocks/explore-data";
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
+import type { ExploreContent } from "@/types/content";
+import { SAVED_SPOTS_KEY, subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, writeTravelStorage } from "@/lib/travel-storage";
 
-const SAVED_SPOTS_KEY = "kspot:saved-spots";
-
-export function SavedSpotsList() {
-  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getSavedSpotsServerSnapshot);
+export function SavedSpotsList({ contents }: { contents: ExploreContent[] }) {
+  const [error, setError] = useState("");
+  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot);
   const savedIds = parseSavedSpotIds(savedSpotsSnapshot);
 
   const savedContents = savedIds
-    .map((id) => exploreContents.find((content) => content.id === id))
-    .filter((content): content is (typeof exploreContents)[number] => content !== undefined);
+    .map((id) => contents.find((content) => content.id === id))
+    .filter((content): content is ExploreContent => content !== undefined);
+  const unavailable = savedIds.filter((id) => !contents.some((content) => content.id === id));
 
-  if (savedContents.length === 0) {
+  if (savedIds.length === 0) {
     return (
       <section className="saved-empty">
         <div className="saved-empty-icon" aria-hidden="true"><AppIcon name="bookmark" size={30} /></div>
@@ -28,17 +30,18 @@ export function SavedSpotsList() {
   }
 
   function removeSaved(id: string) {
-    const nextIds = savedIds.filter((savedId) => savedId !== id);
-    window.localStorage.setItem(SAVED_SPOTS_KEY, JSON.stringify(nextIds));
-    window.dispatchEvent(new Event("kspot:saved-spots-change"));
+    try {
+      const nextIds = parseSavedSpotIds(getSavedSpotsSnapshot()).filter((savedId) => savedId !== id);
+      writeTravelStorage(SAVED_SPOTS_KEY, nextIds); setError("");
+    } catch (error) { setError(error instanceof Error ? error.message : "저장 해제에 실패했습니다."); }
   }
 
   return (
-    <div className="saved-content-grid">
+    <section><p role="status">{error}</p>{unavailable.length > 0 && <div className="saved-unavailable"><p>현재 조회할 수 없는 저장 장소 {unavailable.length}개가 있습니다. 비공개 또는 일시적인 연결 문제일 수 있습니다.</p>{unavailable.map((id) => <button key={id} type="button" onClick={() => removeSaved(id)}>{id} 저장 해제</button>)}</div>}<div className="saved-content-grid">
       {savedContents.map((content) => (
         <article className="saved-content-card" key={content.id}>
           <Link href={`/spots/${content.id}`} className={`saved-content-visual visual-${content.visual}`}>
-            <span>{content.type}</span><strong>{content.title.slice(0, 1)}</strong><small>{content.episode}</small>
+            <span>{content.type}</span><ContentThumbnail src={content.imageUrl} title={content.title} /><small>{content.episode}</small>
           </Link>
           <div className="saved-content-body">
             <p><AppIcon name="pin" size={14} /> {content.region} · {content.spotName}</p>
@@ -46,37 +49,12 @@ export function SavedSpotsList() {
             <span>{content.title} · {content.description}</span>
             <div className="saved-card-footer">
               <Link href={`/spots/${content.id}`}>상세 보기 <AppIcon name="arrow" size={14} /></Link>
+              <Link href={`/planner?spot=${encodeURIComponent(content.id)}`}>일정 만들기</Link>
               <button onClick={() => removeSaved(content.id)} type="button" aria-label={`${content.spotName} 저장 해제`}><AppIcon name="bookmark" size={16} /> 저장 해제</button>
             </div>
           </div>
         </article>
       ))}
-    </div>
+    </div></section>
   );
-}
-
-function subscribeToSavedSpots(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  window.addEventListener("kspot:saved-spots-change", onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener("kspot:saved-spots-change", onChange);
-  };
-}
-
-function getSavedSpotsSnapshot(): string {
-  return window.localStorage.getItem(SAVED_SPOTS_KEY) ?? "[]";
-}
-
-function getSavedSpotsServerSnapshot(): string {
-  return "[]";
-}
-
-function parseSavedSpotIds(value: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : [];
-  } catch {
-    return [];
-  }
 }

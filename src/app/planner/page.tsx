@@ -35,10 +35,10 @@ export default async function PlannerPage({ searchParams }: PlannerPageProps) {
         <fieldset>
           <legend>콘텐츠 취향</legend>
           <div className="planner-choice-grid">
-            {exploreTypes.filter((type) => type !== "전체" && type !== "웹툰/웹소설").map((type, index) => <label className="planner-choice" key={type}><input type="checkbox" name="types" value={type} defaultChecked={selectedSpot ? type === selectedSpot.type : index < 2} /><span>{type}</span></label>)}
+            {exploreTypes.filter((type) => type !== "전체").map((type, index) => <label className="planner-choice" key={type}><input type="checkbox" name="types" value={type} defaultChecked={selectedSpot ? type === selectedSpot.type : index < 2} /><span>{type}</span></label>)}
           </div>
         </fieldset>
-        <div className="planner-form-footer"><p><AppIcon name="sparkles" size={17} /> 데모 데이터 기준으로 조건에 맞는 촬영지를 구성합니다.</p><button className="kspot-primary-button" type="submit">추천 코스 만들기 <AppIcon name="arrow" size={17} /></button></div>
+        <div className="planner-form-footer"><p><AppIcon name="sparkles" size={17} /> 공개된 등록 콘텐츠와 데모 장소에서 조건에 맞는 코스를 구성합니다.</p><button className="kspot-primary-button" type="submit">추천 코스 만들기 <AppIcon name="arrow" size={17} /></button></div>
       </form>
       <Link className="planner-back-link" href="/explore">콘텐츠 먼저 둘러보기 <AppIcon name="arrow" size={15} /></Link>
     </main>

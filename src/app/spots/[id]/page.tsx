@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import { notFound } from "next/navigation";
 
 import { AppIcon } from "@/components/common/app-icon";
@@ -20,7 +21,7 @@ export default async function SpotPage({ params }: SpotPageProps) {
     <main className="spot-detail-page">
       <Link className="spot-back-link" href="/explore"><AppIcon name="arrow" size={16} /> 탐색 결과로 돌아가기</Link>
       <section className="spot-detail-hero">
-        <div className={`spot-detail-visual visual-${content.visual}`}><span>{content.type}</span><strong>{content.title.slice(0, 1)}</strong><small>{content.episode}</small></div>
+        <div className={`spot-detail-visual visual-${content.visual}`}><span>{content.type}</span><ContentThumbnail src={content.imageUrl} title={content.title} /><small>{content.episode}</small></div>
         <div className="spot-detail-intro">
           <p className="kspot-eyebrow">K-SPOT PLACE DETAIL</p>
           <h1>{content.spotName}</h1>
@@ -36,7 +37,7 @@ export default async function SpotPage({ params }: SpotPageProps) {
             <p className="spot-card-eyebrow">FEATURED CONTENT</p>
             <h2>이 장소가 등장한 콘텐츠</h2>
             <div className="spot-content-relation">
-              <div className={`spot-relation-thumb visual-${content.visual}`}>{content.title.slice(0, 1)}</div>
+              <div className={`spot-relation-thumb visual-${content.visual}`}><ContentThumbnail src={content.imageUrl} title={content.title} /></div>
               <div><span>{content.type} · {content.episode}</span><h3>{content.title}</h3><p>{content.description}</p></div>
             </div>
             {relatedContents.length > 0 && <div className="spot-related-list">{relatedContents.map((item) => <Link href={`/spots/${item.id}`} key={item.id}><span>{item.type}</span><strong>{item.title}</strong><AppIcon name="arrow" size={15} /></Link>)}</div>}

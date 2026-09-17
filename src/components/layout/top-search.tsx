@@ -1,4 +1,5 @@
 import { AppIcon } from "@/components/common/app-icon";
+import Link from "next/link";
 
 export function TopSearch() {
   return (
@@ -8,7 +9,7 @@ export function TopSearch() {
         <label className="sr-only" htmlFor="global-query">지역, 콘텐츠, 장소 검색</label>
         <input id="global-query" name="q" placeholder="지역, 콘텐츠, 장소를 검색해보세요" type="search" />
       </form>
-      <button className="icon-button" type="button" aria-label="알림"><AppIcon name="bell" /></button>
+      <Link className="admin-entry-link" href="/admin">관리자</Link>
       <LinkProfile />
     </header>
   );

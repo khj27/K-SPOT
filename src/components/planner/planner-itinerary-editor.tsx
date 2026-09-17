@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { AppIcon } from "@/components/common/app-icon";
 import type { RankedPlace } from "@/lib/recommendation";
 
-export const SAVED_ITINERARIES_KEY = "kspot:saved-itineraries";
+import { storeItinerary } from "@/lib/travel-storage";
 
 type PlannerItineraryEditorProps = {
   recommendations: RankedPlace[];
@@ -15,19 +15,24 @@ type PlannerItineraryEditorProps = {
   transport: string;
   companion: string;
   types: string[];
+  savedId?: string;
 };
 
-export function PlannerItineraryEditor({ recommendations, days, region, transport, companion, types }: PlannerItineraryEditorProps) {
+export function PlannerItineraryEditor({ recommendations, days, region, transport, companion, types, savedId }: PlannerItineraryEditorProps) {
   const [itinerary, setItinerary] = useState(() => recommendations.slice(0, days));
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const itineraryId = useRef(savedId);
 
   function removePlace(id: string) {
+    setSaved(false); setError("");
     setItinerary((current) => current.filter(({ place }) => place.id !== id));
   }
 
   function movePlace(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= itinerary.length) return;
+    setSaved(false); setError("");
     setItinerary((current) => {
       const next = [...current];
       [next[index], next[target]] = [next[target], next[index]];
@@ -37,7 +42,7 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
 
   function saveItinerary() {
     const value = {
-      id: `itinerary-${Date.now()}`,
+      id: itineraryId.current ?? `itinerary-${crypto.randomUUID()}`,
       savedAt: new Date().toISOString(),
       days,
       region,
@@ -46,10 +51,11 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
       types,
       placeIds: itinerary.map(({ place }) => place.id),
     };
-    const existing = readSavedItineraries();
-    window.localStorage.setItem(SAVED_ITINERARIES_KEY, JSON.stringify([value, ...existing]));
-    window.dispatchEvent(new Event("kspot:saved-itineraries-change"));
-    setSaved(true);
+    try {
+      storeItinerary(value);
+      itineraryId.current = value.id;
+      setSaved(true); setError("");
+    } catch (error) { setError(error instanceof Error ? error.message : "일정 저장에 실패했습니다."); }
   }
 
   if (itinerary.length === 0) {
@@ -66,8 +72,10 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
     <>
       <div className="planner-edit-toolbar">
         <span>{itinerary.length}개 장소 · 순서를 조정하거나 제외할 수 있어요.</span>
-        <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={saveItinerary} type="button"><AppIcon name="bookmark" size={16} /> {saved ? "일정 저장됨" : "일정 저장"}</button>
+        <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={saveItinerary} disabled={saved} type="button"><AppIcon name="bookmark" size={16} /> {saved ? "일정 저장됨" : savedId ? "변경사항 저장" : "일정 저장"}</button>
       </div>
+      <p role="status">{error || (saved ? "이 브라우저에 일정을 저장했습니다." : "")}</p>
+      {itinerary.length < days && <p>선택한 {days}일 중 {itinerary.length}일에만 장소가 있습니다. 나머지 날짜는 자유 일정입니다.</p>}
       <div className="planner-itinerary">
         {itinerary.map(({ place, score, reasons }, index) => (
           <article className="planner-day-card" key={place.id}>
@@ -80,32 +88,4 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
       </div>
     </>
   );
-}
-
-export type SavedItinerary = {
-  id: string;
-  savedAt: string;
-  days: number;
-  region: string;
-  transport: string;
-  companion: string;
-  types: string[];
-  placeIds: string[];
-};
-
-export function readSavedItineraries(): SavedItinerary[] {
-  try {
-    const value = window.localStorage.getItem(SAVED_ITINERARIES_KEY);
-    const parsed: unknown = value ? JSON.parse(value) : [];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isSavedItinerary);
-  } catch {
-    return [];
-  }
-}
-
-function isSavedItinerary(value: unknown): value is SavedItinerary {
-  if (!value || typeof value !== "object") return false;
-  const item = value as Record<string, unknown>;
-  return typeof item.id === "string" && typeof item.savedAt === "string" && typeof item.days === "number" && typeof item.region === "string" && typeof item.transport === "string" && typeof item.companion === "string" && Array.isArray(item.types) && item.types.every((type) => typeof type === "string") && Array.isArray(item.placeIds) && item.placeIds.every((id) => typeof id === "string");
 }

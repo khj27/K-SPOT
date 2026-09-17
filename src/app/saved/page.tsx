@@ -1,7 +1,11 @@
 import { SavedSpotsList } from "@/components/saved/saved-spots-list";
 import { SavedItinerariesList } from "@/components/saved/saved-itineraries-list";
+import { getPublicExploreContents } from "@/lib/content-repository";
 
-export default function SavedPage() {
+export const dynamic = "force-dynamic";
+
+export default async function SavedPage() {
+  const contents = await getPublicExploreContents();
   return (
     <main className="saved-page">
       <section className="saved-heading">
@@ -12,8 +16,8 @@ export default function SavedPage() {
         </div>
         <div className="saved-heading-icon" aria-hidden="true">♥</div>
       </section>
-      <SavedItinerariesList />
-      <SavedSpotsList />
+      <SavedItinerariesList contents={contents} />
+      <SavedSpotsList contents={contents} />
       <p className="saved-data-notice">저장한 장소는 현재 이 브라우저에만 보관됩니다. 로그인 기능 연결 후 계정별로 동기화할 예정입니다.</p>
     </main>
   );

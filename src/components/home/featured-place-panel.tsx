@@ -31,7 +31,7 @@ export function FeaturedPlacePanel({ place }: { place?: MapPlace }) {
   const isTourApi = place.source === "tour-api";
   const detail = detailState?.placeId === place.id ? detailState.response : null;
   const description = detail?.item?.overview || place.description;
-  const coverImage = detail?.item?.imageUrl || place.imageUrl;
+  const coverImage = detail?.item?.imageUrl || place.imageUrl || place.kspotContent?.imageUrl;
 
   return (
     <aside className="featured-place-panel">

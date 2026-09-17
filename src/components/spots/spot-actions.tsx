@@ -1,32 +1,39 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { AppIcon } from "@/components/common/app-icon";
 
-const SAVED_SPOTS_KEY = "kspot:saved-spots";
+import { SAVED_SPOTS_KEY, subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, writeTravelStorage } from "@/lib/travel-storage";
 
 export function SpotActions({ spotId }: { spotId: string }) {
-  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getSavedSpotsServerSnapshot);
-  const saved = parseSavedSpots(savedSpotsSnapshot).includes(spotId);
+  const [message, setMessage] = useState("");
+  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot);
+  const saved = parseSavedSpotIds(savedSpotsSnapshot).includes(spotId);
 
   function toggleSaved() {
-    const savedSpots = parseSavedSpots(savedSpotsSnapshot);
+    const savedSpots = parseSavedSpotIds(getSavedSpotsSnapshot());
     const nextSaved = savedSpots.includes(spotId)
       ? savedSpots.filter((id) => id !== spotId)
       : [...savedSpots, spotId];
 
-    window.localStorage.setItem(SAVED_SPOTS_KEY, JSON.stringify(nextSaved));
-    window.dispatchEvent(new Event("kspot:saved-spots-change"));
+    try { writeTravelStorage(SAVED_SPOTS_KEY, nextSaved); setMessage(saved ? "저장을 해제했습니다." : "이 브라우저에 장소를 저장했습니다."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "저장에 실패했습니다."); }
   }
 
   async function shareSpot() {
+    try {
     if (navigator.share) {
       await navigator.share({ title: "K-SPOT 장소", url: window.location.href });
       return;
     }
 
     await navigator.clipboard.writeText(window.location.href);
+    setMessage("장소 주소를 복사했습니다.");
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      setMessage("공유하지 못했습니다. 브라우저 주소창의 주소를 복사해 주세요.");
+    }
   }
 
   return (
@@ -37,32 +44,7 @@ export function SpotActions({ spotId }: { spotId: string }) {
       <button className="spot-action spot-action-secondary" onClick={shareSpot} type="button">
         <AppIcon name="share" size={18} /> 공유
       </button>
+      <p className="spot-action-message" role="status">{message}</p>
     </div>
   );
-}
-
-function subscribeToSavedSpots(onChange: () => void) {
-  window.addEventListener("storage", onChange);
-  window.addEventListener("kspot:saved-spots-change", onChange);
-  return () => {
-    window.removeEventListener("storage", onChange);
-    window.removeEventListener("kspot:saved-spots-change", onChange);
-  };
-}
-
-function getSavedSpotsSnapshot(): string {
-  return window.localStorage.getItem(SAVED_SPOTS_KEY) ?? "[]";
-}
-
-function getSavedSpotsServerSnapshot(): string {
-  return "[]";
-}
-
-function parseSavedSpots(value: string): string[] {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) && parsed.every((item) => typeof item === "string") ? parsed : [];
-  } catch {
-    return [];
-  }
 }

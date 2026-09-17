@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
 
 import { AppIcon } from "@/components/common/app-icon";
 import { getPublicExploreContents } from "@/lib/content-repository";
@@ -73,7 +74,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       {contents.length > 0 ? (
         <div className="explore-result-grid">
           {contents.map((content) => <Link className="explore-content-card" href={`/spots/${content.id}`} key={content.id}>
-            <div className={`explore-card-visual visual-${content.visual}`}><span>{content.type}</span><strong>{content.title.slice(0, 1)}</strong><small>{content.episode}</small></div>
+            <div className={`explore-card-visual visual-${content.visual}`}><span>{content.type}</span><ContentThumbnail src={content.imageUrl} title={content.title} /><small>{content.episode}</small></div>
             <div className="explore-card-body"><p><AppIcon name="pin" size={14} /> {content.region} · {content.spotName}</p><h2>{content.title}</h2><span>{content.description}</span><b>장소 상세 보기 <AppIcon name="arrow" size={14} /></b></div>
           </Link>)}
         </div>

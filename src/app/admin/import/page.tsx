@@ -1,7 +1,7 @@
-import { RoutePlaceholder } from "@/components/common/route-placeholder";
+import { AdminCsvImport } from "@/components/admin/admin-csv-import";
 import { requireAdminPage } from "@/lib/firebase/session";
 
 export default async function AdminImportPage() {
   await requireAdminPage();
-  return <RoutePlaceholder eyebrow="ADMIN · CSV" title="CSV 데이터 일괄 등록" description="파일 선택, 데이터 미리보기와 행별 오류를 확인할 화면입니다." nextStep="STEP 9에서 파싱, 공통 검증과 정상 행 저장을 구현합니다." />;
+  return <main className="admin-page"><section className="admin-heading"><div><p className="kspot-eyebrow">ADMIN · CSV</p><h1>CSV 데이터 일괄 등록</h1><p>오류를 확인한 후 정상 항목만 초안으로 저장합니다.</p></div></section><AdminCsvImport /></main>;
 }
