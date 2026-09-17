@@ -4,12 +4,12 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { AppIcon } from "@/components/common/app-icon";
-import type { ExploreContent } from "@/types/content";
+import type { RankedPlace } from "@/lib/recommendation";
 
 export const SAVED_ITINERARIES_KEY = "kspot:saved-itineraries";
 
 type PlannerItineraryEditorProps = {
-  places: ExploreContent[];
+  recommendations: RankedPlace[];
   days: number;
   region: string;
   transport: string;
@@ -17,12 +17,12 @@ type PlannerItineraryEditorProps = {
   types: string[];
 };
 
-export function PlannerItineraryEditor({ places, days, region, transport, companion, types }: PlannerItineraryEditorProps) {
-  const [itinerary, setItinerary] = useState(() => places.slice(0, days));
+export function PlannerItineraryEditor({ recommendations, days, region, transport, companion, types }: PlannerItineraryEditorProps) {
+  const [itinerary, setItinerary] = useState(() => recommendations.slice(0, days));
   const [saved, setSaved] = useState(false);
 
   function removePlace(id: string) {
-    setItinerary((current) => current.filter((place) => place.id !== id));
+    setItinerary((current) => current.filter(({ place }) => place.id !== id));
   }
 
   function movePlace(index: number, direction: -1 | 1) {
@@ -44,7 +44,7 @@ export function PlannerItineraryEditor({ places, days, region, transport, compan
       transport,
       companion,
       types,
-      placeIds: itinerary.map((place) => place.id),
+      placeIds: itinerary.map(({ place }) => place.id),
     };
     const existing = readSavedItineraries();
     window.localStorage.setItem(SAVED_ITINERARIES_KEY, JSON.stringify([value, ...existing]));
@@ -69,10 +69,10 @@ export function PlannerItineraryEditor({ places, days, region, transport, compan
         <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={saveItinerary} type="button"><AppIcon name="bookmark" size={16} /> {saved ? "일정 저장됨" : "일정 저장"}</button>
       </div>
       <div className="planner-itinerary">
-        {itinerary.map((place, index) => (
+        {itinerary.map(({ place, score, reasons }, index) => (
           <article className="planner-day-card" key={place.id}>
             <div className="planner-day-label"><strong>DAY {index + 1}</strong><span>{index === 0 ? "여행 시작" : index === itinerary.length - 1 ? "여행 마무리" : "로컬 탐방"}</span></div>
-            <div className="planner-stop"><div className={`planner-stop-visual visual-${place.visual}`}>{place.title.slice(0, 1)}</div><div className="planner-stop-content"><p><AppIcon name="pin" size={14} /> {place.region} · {place.type}</p><h2>{place.spotName}</h2><span>{place.title} · {place.episode}</span><Link href={`/spots/${place.id}`}>장소 상세 <AppIcon name="arrow" size={14} /></Link></div></div>
+            <div className="planner-stop"><div className={`planner-stop-visual visual-${place.visual}`}>{place.title.slice(0, 1)}</div><div className="planner-stop-content"><p><AppIcon name="pin" size={14} /> {place.region} · {place.type}</p><h2>{place.spotName}</h2><span>{place.title} · {place.episode}</span><div className="recommendation-reasons" aria-label={`추천 점수 ${score}점`}>{reasons.map((reason) => <small key={reason}>{reason}</small>)}</div><Link href={`/spots/${place.id}`}>장소 상세 <AppIcon name="arrow" size={14} /></Link></div></div>
             <div className="planner-time-note"><span>추천 체류</span><strong>{index % 2 === 0 ? "2시간" : "1시간 30분"}</strong><span>다음 장소까지 이동을 고려한 예시 일정입니다.</span></div>
             <div className="planner-day-actions"><button onClick={() => movePlace(index, -1)} disabled={index === 0} type="button" aria-label="앞으로 이동">↑</button><button onClick={() => movePlace(index, 1)} disabled={index === itinerary.length - 1} type="button" aria-label="뒤로 이동">↓</button><button onClick={() => removePlace(place.id)} type="button" aria-label={`${place.spotName} 일정에서 삭제`}>삭제</button></div>
           </article>

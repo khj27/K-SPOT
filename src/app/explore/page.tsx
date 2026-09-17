@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { AppIcon } from "@/components/common/app-icon";
-import { exploreContents, exploreRegions, exploreTypes } from "@/mocks/explore-data";
+import { getPublicExploreContents } from "@/lib/content-repository";
+import { exploreRegions, exploreTypes } from "@/mocks/explore-data";
 
 type ExplorePageProps = {
   searchParams: Promise<{ q?: string; type?: string; region?: string; content?: string }>;
@@ -21,15 +22,13 @@ function getSelectedType(value: string | undefined): (typeof exploreTypes)[numbe
   return exploreTypes.find((type) => type === normalized) ?? "전체";
 }
 
-function getSelectedRegion(value: string | undefined): (typeof exploreRegions)[number] {
-  return exploreRegions.find((region) => region === value) ?? "전체 지역";
-}
-
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const selectedType = getSelectedType(params.type);
-  const selectedRegion = getSelectedRegion(params.region);
+  const exploreContents = await getPublicExploreContents();
+  const regions = ["전체 지역", ...new Set([...exploreRegions.filter((region) => region !== "전체 지역"), ...exploreContents.map((content) => content.region)])];
+  const selectedRegion = regions.includes(params.region ?? "") ? params.region! : "전체 지역";
   const selectedContentId = params.content?.trim();
   const contents = exploreContents.filter((content) => {
     const matchesContent = !selectedContentId || content.id === selectedContentId;
@@ -53,7 +52,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       <form className="explore-filter-panel" action="/explore">
         <label className="explore-query"><AppIcon name="search" size={19} /><span className="sr-only">콘텐츠 또는 장소 검색</span><input name="q" defaultValue={query} placeholder="콘텐츠명, 장소명, 지역을 검색해보세요" /></label>
         <label><span>콘텐츠 유형</span><select name="type" defaultValue={selectedType}>{exploreTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
-        <label><span>지역</span><select name="region" defaultValue={selectedRegion}>{exploreRegions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
+        <label><span>지역</span><select name="region" defaultValue={selectedRegion}>{regions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
         <button className="kspot-primary-button" type="submit">검색 <AppIcon name="arrow" size={16} /></button>
       </form>
 
@@ -81,7 +80,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       ) : (
         <section className="explore-empty"><div aria-hidden="true">⌕</div><h2>검색 결과가 없습니다.</h2><p>검색어 또는 필터를 바꿔 다시 찾아보세요.</p><Link className="button button-secondary" href="/explore">전체 결과 보기</Link></section>
       )}
-      <p className="explore-data-notice">현재 결과는 기능 검증용 데모 데이터입니다. 공개 전 장소 정보와 촬영 출처를 검수합니다.</p>
+      <p className="explore-data-notice">관리자가 공개한 데이터는 작품·장소 관계의 출처와 검수일을 함께 관리합니다.</p>
     </main>
   );
 }

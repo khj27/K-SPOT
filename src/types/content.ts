@@ -22,4 +22,11 @@ export type ExploreContent = {
   description: string;
   episode: string;
   visual: "navy" | "sky" | "rose" | "violet" | "green";
+  address?: string;
+  sourceUrl?: string;
+  sourceLabel?: string;
+  verifiedAt?: string;
+  imageUrl?: string;
+  imageRights?: string;
+  managed?: boolean;
 };

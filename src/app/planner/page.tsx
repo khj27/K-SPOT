@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 import { AppIcon } from "@/components/common/app-icon";
-import { exploreContents, exploreRegions, exploreTypes } from "@/mocks/explore-data";
+import { getPublicExploreContents } from "@/lib/content-repository";
+import { exploreRegions, exploreTypes } from "@/mocks/explore-data";
 
 type PlannerPageProps = {
   searchParams: Promise<{ spot?: string }>;
@@ -9,6 +10,8 @@ type PlannerPageProps = {
 
 export default async function PlannerPage({ searchParams }: PlannerPageProps) {
   const { spot } = await searchParams;
+  const exploreContents = await getPublicExploreContents();
+  const regions = [...new Set([...exploreRegions.filter((region) => region !== "전체 지역"), ...exploreContents.map((content) => content.region)])];
   const selectedSpot = exploreContents.find((content) => content.id === spot);
 
   return (
@@ -24,7 +27,7 @@ export default async function PlannerPage({ searchParams }: PlannerPageProps) {
           <legend>여행 기본 정보</legend>
           <div className="planner-field-grid">
             <label><span>여행 기간</span><select name="days" defaultValue="2"><option value="1">당일치기</option><option value="2">1박 2일</option><option value="3">2박 3일</option></select></label>
-            <label><span>출발 지역</span><select name="region" defaultValue={selectedSpot?.region ?? "부산"}>{exploreRegions.filter((region) => region !== "전체 지역").map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
+            <label><span>출발 지역</span><select name="region" defaultValue={selectedSpot?.region ?? "부산"}>{regions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
             <label><span>이동 수단</span><select name="transport" defaultValue="대중교통"><option>대중교통</option><option>자가용</option><option>도보 중심</option></select></label>
             <label><span>동행자</span><select name="companion" defaultValue="친구"><option>혼자</option><option>친구</option><option>연인</option><option>가족</option></select></label>
           </div>

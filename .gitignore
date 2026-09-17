@@ -23,3 +23,7 @@ pnpm-debug.log*
 Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase service account credentials
+*firebase-adminsdk*.json
+service-account*.json

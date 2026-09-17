@@ -2,23 +2,15 @@ import Link from "next/link";
 
 import { AppIcon } from "@/components/common/app-icon";
 import { CategoryCard } from "@/components/home/category-card";
-import { FeaturedPlacePanel } from "@/components/home/featured-place-panel";
-import { MapCanvas } from "@/components/home/map-canvas";
+import { HomeMapExperience } from "@/components/home/home-map-experience";
+import { getPublicExploreContents } from "@/lib/content-repository";
 import { homeCategories } from "@/mocks/home-data";
 
-const contentFilters = ["전체", "드라마", "예능", "영화", "뮤직비디오", "아이돌", "웹툰/웹소설"];
-
-export default function HomePage() {
+export default async function HomePage() {
+  const contents = await getPublicExploreContents();
   return (
     <main className="home-dashboard">
-      <section className="home-filter-row" aria-label="콘텐츠 유형 필터">
-        {contentFilters.map((filter, index) => <Link className={index === 0 ? "is-active" : undefined} href={index === 0 ? "/explore" : `/explore?type=${encodeURIComponent(filter)}`} key={filter}>{filter}</Link>)}
-      </section>
-
-      <section className="home-map-layout">
-        <MapCanvas />
-        <FeaturedPlacePanel />
-      </section>
+      <HomeMapExperience kakaoMapKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? ""} contents={contents} />
 
       <section className="home-categories">
         <div className="home-section-heading"><div><h2>어떤 콘텐츠를 좋아하시나요?</h2><p>좋아하는 유형에서 전국의 K-콘텐츠 장소를 찾아보세요.</p></div><Link href="/explore">전체 보기 <AppIcon name="arrow" size={16} /></Link></div>
@@ -31,7 +23,7 @@ export default function HomePage() {
         <Link href="/planner">코스 추천 시작하기 <AppIcon name="arrow" size={18} /></Link>
       </section>
 
-      <p className="home-data-disclaimer">현재 화면은 제공된 UI 시안을 반영한 기능 검증용 데모입니다. 실제 관광·콘텐츠 관계는 출처 검수 후 공개됩니다.</p>
+      <p className="home-data-disclaimer">관리자 검수를 통과한 콘텐츠 장소와 한국관광공사 관광정보를 함께 제공합니다.</p>
     </main>
   );
 }

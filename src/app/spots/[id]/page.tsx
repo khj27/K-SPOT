@@ -2,13 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AppIcon } from "@/components/common/app-icon";
+import { NearbyTourism } from "@/components/spots/nearby-tourism";
 import { SpotActions } from "@/components/spots/spot-actions";
-import { exploreContents } from "@/mocks/explore-data";
+import { getPublicExploreContents } from "@/lib/content-repository";
 
 type SpotPageProps = { params: Promise<{ id: string }> };
 
 export default async function SpotPage({ params }: SpotPageProps) {
   const { id } = await params;
+  const exploreContents = await getPublicExploreContents();
   const content = exploreContents.find((item) => item.id === id);
   if (!content) notFound();
 
@@ -42,15 +44,17 @@ export default async function SpotPage({ params }: SpotPageProps) {
           <section className="spot-detail-card source-card">
             <p className="spot-card-eyebrow">DATA NOTE</p>
             <h2>정보 출처와 검수 상태</h2>
-            <p>현재 장소 정보는 화면 기능 검증을 위한 데모 데이터입니다. 공개 전 공식 관광 정보와 촬영 출처를 확인한 뒤 실제 데이터로 교체합니다.</p>
-            <span className="verification-badge">데모 데이터 · 공개 전 검수 필요</span>
+            <p>{content.managed ? `${content.sourceLabel} 자료를 근거로 작품과 장소의 관계를 확인했습니다.` : "현재 장소 정보는 화면 기능 검증을 위한 데모 데이터입니다. 공개 전 공식 관광 정보와 촬영 출처를 확인합니다."}</p>
+            {content.sourceUrl && <a className="source-link" href={content.sourceUrl} target="_blank" rel="noreferrer">근거 자료 확인 <AppIcon name="arrow" size={14} /></a>}
+            <span className="verification-badge">{content.managed ? `검수 완료 · ${content.verifiedAt}` : "데모 데이터 · 공개 전 검수 필요"}</span>
           </section>
+          <NearbyTourism latitude={content.coordinates.latitude} longitude={content.coordinates.longitude} />
         </div>
         <aside className="spot-side-column">
           <section className="spot-detail-card">
             <p className="spot-card-eyebrow">PLACE INFO</p>
             <h2>장소 정보</h2>
-            <dl className="spot-info-list"><div><dt>지역</dt><dd>{content.region}</dd></div><div><dt>장소명</dt><dd>{content.spotName}</dd></div><div><dt>콘텐츠 유형</dt><dd>{content.type}</dd></div><div><dt>방문 팁</dt><dd>운영 시간과 접근성을 방문 전 확인해 주세요.</dd></div></dl>
+            <dl className="spot-info-list"><div><dt>지역</dt><dd>{content.region}</dd></div><div><dt>장소명</dt><dd>{content.spotName}</dd></div>{content.address && <div><dt>주소</dt><dd>{content.address}</dd></div>}<div><dt>콘텐츠 유형</dt><dd>{content.type}</dd></div><div><dt>방문 팁</dt><dd>운영 시간과 접근성을 방문 전 확인해 주세요.</dd></div></dl>
           </section>
           <section className="spot-mini-map"><div className="map-grid-lines" /><AppIcon name="pin" size={32} /><strong>{content.spotName}</strong><span>지도 서비스 연결 예정</span></section>
           <Link className="spot-planner-link" href={`/planner?spot=${content.id}`}>이 장소를 포함한 코스 추천 <AppIcon name="arrow" size={17} /></Link>

@@ -1,5 +1,9 @@
-import { RoutePlaceholder } from "@/components/common/route-placeholder";
+import Link from "next/link";
 
-export default function NewSpotPage() {
-  return <RoutePlaceholder eyebrow="ADMIN · NEW SPOT" title="새 관광 장소 등록" description="좌표, 콘텐츠 관계, 출처와 이미지 권리 정보를 입력할 화면입니다." nextStep="STEP 8에서 공통 검증 스키마 기반 등록 폼을 구현합니다." backHref="/admin/spots" backLabel="장소 관리로 돌아가기" />;
+import { AdminContentForm } from "@/components/admin/admin-content-form";
+import { requireAdminPage } from "@/lib/firebase/session";
+
+export default async function NewSpotPage() {
+  await requireAdminPage();
+  return <main className="admin-page"><Link className="admin-back" href="/admin/spots">← 콘텐츠 장소 관리</Link><section className="admin-heading"><div><p className="kspot-eyebrow">ADMIN · NEW CONTENT PLACE</p><h1>새 콘텐츠 장소 등록</h1><p>출처와 이미지 권리를 포함해 공개 가능한 데이터 한 건을 만듭니다.</p></div></section><AdminContentForm /></main>;
 }
