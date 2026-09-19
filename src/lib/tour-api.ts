@@ -92,11 +92,6 @@ export async function getTourismDetail(contentId: string): Promise<TourApiDetail
     MobileApp: "Locally",
     _type: "json",
     contentId,
-    defaultYN: "Y",
-    firstImageYN: "Y",
-    addrinfoYN: "Y",
-    mapinfoYN: "Y",
-    overviewYN: "Y",
   }).toString();
 
   try {
