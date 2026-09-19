@@ -1,10 +1,19 @@
 "use client";
 
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth, inMemoryPersistence } from "firebase/auth";
 
 export function isFirebaseClientConfigured() {
   return Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY && process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+}
+
+// User login is separate from the administrator's client auth session.
+export function getFirebaseUserAuth() {
+  if (!isFirebaseClientConfigured()) throw new Error("Firebase 설정이 필요합니다.");
+  const existing = getApps().find((app) => app.name === "kspot-users");
+  if (existing) return getAuth(existing);
+  const app = initializeApp({ apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY, authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID }, "kspot-users");
+  return initializeAuth(app, { persistence: inMemoryPersistence });
 }
 
 export function getFirebaseClientAuth() {

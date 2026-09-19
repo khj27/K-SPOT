@@ -6,20 +6,34 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const source = fs.readFileSync(path.join(__dirname, '../src/lib/travel-storage.ts'), 'utf8');
-function setup(blocked = false, failWrite = 0) {
+function setup(blocked = false, failWrite = 0, scope = "guest") {
   let writes = 0;
   const entries = new Map();
   const events = [];
   const exports = {};
+  const document = { documentElement: { dataset: { userScope: scope } } };
   vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, {
-    exports, Event, TextEncoder, window: { localStorage: {
+    exports, Event, TextEncoder, document, window: { localStorage: {
       getItem(key) { if (blocked) throw new Error('blocked'); return entries.get(key) ?? null; },
       setItem(key, value) { writes++; if (blocked || writes === failWrite) throw new Error('blocked'); entries.set(key, value); },
     }, dispatchEvent(event) { events.push(event.type); } },
   });
-  return { api: exports, entries, events };
+  return { api: exports, entries, events, document };
 }
 const trip = { id: 'trip-one', savedAt: '2026-09-18', days: 2, region: '서울', transport: '대중교통', companion: '친구', types: ['영화'], placeIds: ['research-place', 'reply-1988'] };
+test('local data is separated between guest and each signed-in user', () => {
+  const { api, document } = setup();
+  api.storeItinerary(trip);
+  document.documentElement.dataset.userScope = 'user-a';
+  assert.equal(api.parseItineraries(api.getItinerariesSnapshot()).length, 0);
+  api.storeItinerary({ ...trip, id: 'a-trip' });
+  document.documentElement.dataset.userScope = 'user-b';
+  assert.equal(api.parseItineraries(api.getItinerariesSnapshot()).length, 0);
+  document.documentElement.dataset.userScope = 'user-a';
+  assert.equal(api.createTravelBackup().itineraries[0].id, 'a-trip');
+  document.documentElement.dataset.userScope = 'guest';
+  assert.equal(api.createTravelBackup().itineraries[0].id, 'trip-one');
+});
 test('managed place IDs and their order survive saving and reload', () => {
   const { api } = setup();
   api.storeItinerary(trip);

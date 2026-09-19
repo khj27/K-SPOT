@@ -49,6 +49,6 @@ export function TravelDashboard() {
       {preview && <div className="travel-restore-preview"><h3>복원할 데이터</h3><p>저장 장소 {preview.spots.length}개 · 일정 {preview.itineraries.length}개</p><p>백업 생성: {new Date(preview.exportedAt).toLocaleString("ko-KR")}</p><p>기존 데이터에 추가합니다. 동일한 ID의 장소·일정은 현재 기기의 값을 유지합니다. 공개 중단된 장소는 복원 후에도 조회되지 않을 수 있습니다.</p><button className="kspot-primary-button" type="button" onClick={restore}>기존 데이터에 추가 복원</button></div>}
       <p role="status" aria-live="polite">{busy ? "백업 파일 확인 중…" : message}</p>
     </section>
-    <p className="saved-data-notice">자동 계정 동기화는 아직 지원하지 않습니다. 브라우저 데이터를 지우기 전에 백업해 주세요.</p>
+    <p className="saved-data-notice">자동 동기화는 지원하지 않습니다. 로그인 후 계정 자료 보관 기능 또는 JSON 백업을 이용해 주세요. 브라우저 데이터를 지우기 전에 저장 여부를 확인해 주세요.</p>
   </div>;
 }

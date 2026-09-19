@@ -10,6 +10,7 @@ export function TopSearch() {
         <input id="global-query" name="q" placeholder="지역, 콘텐츠, 장소를 검색해보세요" type="search" />
       </form>
       <Link className="admin-entry-link" href="/admin">관리자</Link>
+      <Link className="admin-entry-link" href="/login">로그인·가입</Link>
       <LinkProfile />
     </header>
   );

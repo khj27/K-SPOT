@@ -18,7 +18,7 @@ export default async function SavedPage() {
       </section>
       <SavedItinerariesList contents={contents} />
       <SavedSpotsList contents={contents} />
-      <p className="saved-data-notice">저장한 장소는 현재 이 브라우저에만 보관됩니다. 로그인 기능 연결 후 계정별로 동기화할 예정입니다.</p>
+      <p className="saved-data-notice">현재 브라우저에 저장된 자료입니다. 마이페이지에서 로그인 후 계정에 보관하거나 다른 기기의 자료를 가져올 수 있습니다.</p>
     </main>
   );
 }

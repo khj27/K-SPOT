@@ -1,6 +1,11 @@
 export const SAVED_SPOTS_KEY = "kspot:saved-spots";
 export const SAVED_ITINERARIES_KEY = "kspot:saved-itineraries";
 
+export function scopedTravelKey(key: string) {
+  const uid = typeof document === "undefined" ? "guest" : document.documentElement.dataset.userScope ?? "guest";
+  return uid === "guest" ? key : `${key}:user:${uid}`;
+}
+
 export type SavedItinerary = {
   id: string; savedAt: string; days: number; region: string;
   transport: string; companion: string; types: string[]; placeIds: string[];
@@ -30,11 +35,11 @@ export function parseItineraries(value: string): SavedItinerary[] {
 }
 
 export function readTravelStorage(key: string): string {
-  try { return window.localStorage.getItem(key) ?? "[]"; } catch { return "[]"; }
+  try { return window.localStorage.getItem(scopedTravelKey(key)) ?? "[]"; } catch { return "[]"; }
 }
 
 export function writeTravelStorage(key: string, value: unknown) {
-  try { window.localStorage.setItem(key, JSON.stringify(value)); }
+  try { window.localStorage.setItem(scopedTravelKey(key), JSON.stringify(value)); }
   catch { throw new Error("브라우저 저장 공간에 접근하지 못했습니다. 저장 공간과 사이트 저장 허용 설정을 확인해 주세요."); }
   window.dispatchEvent(new Event(`${key}-change`));
 }
@@ -76,7 +81,7 @@ export function parseTravelBackup(text: string): TravelBackup {
 export function createTravelBackup(): TravelBackup {
   // Read directly: blocked storage must not become a seemingly successful empty backup.
   let spots, itineraries;
-  try { spots = JSON.parse(window.localStorage.getItem(SAVED_SPOTS_KEY) ?? "[]"); itineraries = JSON.parse(window.localStorage.getItem(SAVED_ITINERARIES_KEY) ?? "[]"); }
+  try { spots = JSON.parse(window.localStorage.getItem(scopedTravelKey(SAVED_SPOTS_KEY)) ?? "[]"); itineraries = JSON.parse(window.localStorage.getItem(scopedTravelKey(SAVED_ITINERARIES_KEY)) ?? "[]"); }
   catch { throw new Error("현재 여행 데이터를 읽지 못했습니다. 브라우저 저장 설정과 데이터를 확인해 주세요."); }
   return parseTravelBackup(JSON.stringify({ format: "kspot-travel", version: 1, exportedAt: new Date().toISOString(), spots, itineraries }));
 }
@@ -89,12 +94,12 @@ export function restoreTravelBackup(backup: TravelBackup) {
   const additions = incoming.itineraries.filter((item) => !existingIds.has(item.id));
   const merged = parseTravelBackup(JSON.stringify({ ...current, spots, itineraries: [...current.itineraries, ...additions] }));
   try {
-    window.localStorage.setItem(SAVED_SPOTS_KEY, JSON.stringify(merged.spots));
-    window.localStorage.setItem(SAVED_ITINERARIES_KEY, JSON.stringify(merged.itineraries));
+    window.localStorage.setItem(scopedTravelKey(SAVED_SPOTS_KEY), JSON.stringify(merged.spots));
+    window.localStorage.setItem(scopedTravelKey(SAVED_ITINERARIES_KEY), JSON.stringify(merged.itineraries));
   } catch {
     try {
-      window.localStorage.setItem(SAVED_SPOTS_KEY, JSON.stringify(current.spots));
-      window.localStorage.setItem(SAVED_ITINERARIES_KEY, JSON.stringify(current.itineraries));
+      window.localStorage.setItem(scopedTravelKey(SAVED_SPOTS_KEY), JSON.stringify(current.spots));
+      window.localStorage.setItem(scopedTravelKey(SAVED_ITINERARIES_KEY), JSON.stringify(current.itineraries));
     } catch { throw new Error("복원 중 저장소 접근이 차단되었습니다. 일부 항목만 반영되었을 수 있습니다. 저장 설정을 확인하고 다시 복원해 주세요."); }
     throw new Error("저장 공간 부족 또는 접근 제한으로 복원하지 못했습니다. 기존 데이터는 유지됩니다.");
   } finally {
