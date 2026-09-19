@@ -14,8 +14,8 @@ export type AdminContentSpotInput = {
   spotName: string;
   region: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
   sourceUrl: string;
   sourceLabel: string;
   verifiedAt: string;
@@ -25,6 +25,7 @@ export type AdminContentSpotInput = {
 };
 
 export type AdminContentSpot = AdminContentSpotInput & {
+  researchImport?: { sheetName: string; spreadsheetUrl: string; notes: string[]; rows: { label: string; value: string; links: string[] }[] };
   id: string;
   createdAt: string;
   updatedAt: string;

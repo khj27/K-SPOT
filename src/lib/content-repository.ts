@@ -39,7 +39,7 @@ export async function updateAdminContentSpot(id: string, input: AdminContentSpot
 export async function getPublicExploreContents(): Promise<ExploreContent[]> {
   if (!isFirebaseAdminConfigured()) return exploreContents;
   try {
-    const managed = (await listAdminContentSpots()).filter((item) => item.status === "published").map(toExploreContent);
+    const managed = (await listAdminContentSpots()).filter((item) => item.status === "published" && item.latitude !== null && item.longitude !== null).map(toExploreContent);
     const merged = new Map(exploreContents.map((item) => [item.id, item]));
     managed.forEach((item) => merged.set(item.id, item));
     return Array.from(merged.values());
@@ -62,8 +62,9 @@ function serializeAdminContent(id: string, data: Record<string, unknown>): Admin
     spotName: String(data.spotName ?? ""),
     region: String(data.region ?? ""),
     address: String(data.address ?? ""),
-    latitude: Number(data.latitude),
-    longitude: Number(data.longitude),
+    latitude: typeof data.latitude === "number" ? data.latitude : null,
+    longitude: typeof data.longitude === "number" ? data.longitude : null,
+    researchImport: data.researchImport as AdminContentSpot["researchImport"],
     sourceUrl: String(data.sourceUrl ?? ""),
     sourceLabel: String(data.sourceLabel ?? ""),
     verifiedAt: String(data.verifiedAt ?? ""),
@@ -78,6 +79,7 @@ function serializeAdminContent(id: string, data: Record<string, unknown>): Admin
 }
 
 function toExploreContent(item: AdminContentSpot): ExploreContent {
+  if (item.latitude === null || item.longitude === null) throw new Error("MISSING_COORDINATES");
   const visuals: Record<ContentType, ExploreContent["visual"]> = { 드라마: "navy", 예능: "sky", 영화: "violet", 뮤직비디오: "rose", 아이돌: "violet", "웹툰/웹소설": "green" };
   const tones: Record<ContentType, DemoMapPosition["tone"]> = { 드라마: "purple", 예능: "blue", 영화: "orange", 뮤직비디오: "red", 아이돌: "teal", "웹툰/웹소설": "green" };
   return {

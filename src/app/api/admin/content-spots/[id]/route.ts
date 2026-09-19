@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: RouteProps) {
 export async function PUT(request: Request, { params }: RouteProps) {
   const admin = await getAdminIdentity();
   if (!admin) return NextResponse.json({ message: "관리자 로그인이 필요합니다." }, { status: 401 });
-  const validation = validateAdminContentSpot(await request.json().catch(() => null));
+  const validation = validateAdminContentSpot(await request.json().catch(() => null), { allowIncompleteDraft: true });
   if (!validation.data) return NextResponse.json({ message: "입력값을 확인해 주세요.", errors: validation.errors }, { status: 400 });
   const { id } = await params;
   try {

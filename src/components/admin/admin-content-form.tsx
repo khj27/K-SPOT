@@ -48,6 +48,8 @@ export function AdminContentForm({ initial }: Props) {
   const field = (name: string) => errors[name] ? <small className="admin-field-error">{errors[name]}</small> : null;
   return (
     <form className="admin-content-form" onSubmit={submit} noValidate>
+      <p>좌표·출처·검수일·이미지 권리가 미확인인 자료는 임시 저장할 수 있습니다. 즉시 공개하려면 모든 필수 정보를 보완해야 합니다.</p>
+      {initial?.researchImport && <section className="admin-form-section"><h2>가져온 조사 자료: {initial.researchImport.sheetName}</h2><a href={initial.researchImport.spreadsheetUrl} target="_blank" rel="noreferrer">원본 스프레드시트</a><ul>{initial.researchImport.notes.map((note) => <li key={note}>{note}</li>)}</ul><details><summary>원본 조사 항목 전체 보기</summary><dl>{initial.researchImport.rows.map((row, index) => <div key={index}><dt><strong>{row.label}</strong></dt><dd style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{row.value}{row.links.map((url) => <p key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></p>)}</dd></div>)}</dl></details></section>}
       <section className="admin-form-section">
         <div><p>CONTENT</p><h2>콘텐츠 정보</h2></div>
         <div className="admin-form-grid">
@@ -67,8 +69,8 @@ export function AdminContentForm({ initial }: Props) {
           <label><span>장소명 *</span><input name="spotName" defaultValue={initial?.spotName} required />{field("spotName")}</label>
           <label><span>지역 *</span><input name="region" defaultValue={initial?.region} placeholder="예: 부산" required />{field("region")}</label>
           <label className="admin-field-wide"><span>주소 *</span><input name="address" defaultValue={initial?.address} required />{field("address")}</label>
-          <label><span>위도 *</span><input name="latitude" type="number" step="any" defaultValue={initial?.latitude} placeholder="35.1532" required />{field("latitude")}</label>
-          <label><span>경도 *</span><input name="longitude" type="number" step="any" defaultValue={initial?.longitude} placeholder="129.1186" required />{field("longitude")}</label>
+          <label><span>위도 *</span><input name="latitude" type="number" step="any" defaultValue={initial?.latitude ?? ""} placeholder="35.1532" required />{field("latitude")}</label>
+          <label><span>경도 *</span><input name="longitude" type="number" step="any" defaultValue={initial?.longitude ?? ""} placeholder="129.1186" required />{field("longitude")}</label>
         </div>
       </section>
 
@@ -76,7 +78,7 @@ export function AdminContentForm({ initial }: Props) {
         <div><p>EVIDENCE</p><h2>근거와 권리</h2></div>
         <div className="admin-form-grid">
           <label><span>출처명 *</span><input name="sourceLabel" defaultValue={initial?.sourceLabel} placeholder="예: 부산영상위원회" required />{field("sourceLabel")}</label>
-          <label><span>검수일 *</span><input name="verifiedAt" type="date" defaultValue={initial?.verifiedAt ?? new Date().toISOString().slice(0, 10)} required />{field("verifiedAt")}</label>
+          <label><span>검수일 *</span><input name="verifiedAt" type="date" defaultValue={initial?.verifiedAt ?? ""} required />{field("verifiedAt")}</label>
           <label className="admin-field-wide"><span>근거 URL · 유튜브 영상 주소 *</span><input name="sourceUrl" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} required />{field("sourceUrl")}<small>유튜브 영상·공유 링크·Shorts 주소를 넣으면 썸네일이 자동 표시됩니다.</small></label>
           <label className="admin-field-wide"><span>대표 이미지 또는 유튜브 주소 (선택)</span><input name="imageUrl" type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />{field("imageUrl")}<small>입력하면 근거 URL의 썸네일 대신 사용합니다. 다른 사이트는 이미지 파일 주소를 입력하세요.</small></label>
           {thumbnail && <div className="admin-field-wide"><p>썸네일 미리보기</p><div className="admin-thumbnail-preview"><ContentThumbnail src={thumbnail} title={initial?.contentTitle ?? "콘텐츠"} /></div></div>}

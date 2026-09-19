@@ -5,8 +5,9 @@ import type { ContentType } from "@/types/content";
 const contentTypes = exploreTypes.filter((type): type is ContentType => type !== "전체");
 const statuses: ContentStatus[] = ["draft", "published"];
 
-export function validateAdminContentSpot(value: unknown): AdminContentValidation {
+export function validateAdminContentSpot(value: unknown, options: { allowIncompleteDraft?: boolean } = {}): AdminContentValidation {
   const input = isRecord(value) ? value : {};
+  const incompleteDraft = options.allowIncompleteDraft === true && input.status === "draft";
   const errors: Record<string, string> = {};
   const text = (key: string, label: string, required = true, max = 500) => {
     const result = typeof input[key] === "string" ? input[key].trim() : "";
@@ -29,20 +30,24 @@ export function validateAdminContentSpot(value: unknown): AdminContentValidation
   const spotName = text("spotName", "장소명", true, 120);
   const region = text("region", "지역", true, 60);
   const address = text("address", "주소", true, 240);
-  const coordinate = (value: unknown) => (typeof value === "number" || (typeof value === "string" && value.trim())) ? Number(value) : NaN;
+  const coordinate = (value: unknown) => {
+    const missing = value === null || value === undefined || (typeof value === "string" && !value.trim());
+    if (missing) return incompleteDraft ? null : NaN;
+    return typeof value === "number" || typeof value === "string" ? Number(value) : NaN;
+  };
   const latitude = coordinate(input.latitude);
   const longitude = coordinate(input.longitude);
-  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) errors.latitude = "위도는 -90~90 사이 숫자여야 합니다.";
-  if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) errors.longitude = "경도는 -180~180 사이 숫자여야 합니다.";
-  const sourceUrl = text("sourceUrl", "근거 URL", true, 500);
+  if (latitude !== null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) errors.latitude = "위도는 -90~90 사이 숫자여야 합니다.";
+  if (longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) errors.longitude = "경도는 -180~180 사이 숫자여야 합니다.";
+  const sourceUrl = text("sourceUrl", "근거 URL", !incompleteDraft, 500);
   if (sourceUrl && !isHttpUrl(sourceUrl)) errors.sourceUrl = "http 또는 https 주소를 입력해 주세요.";
-  const sourceLabel = text("sourceLabel", "출처명", true, 120);
-  const verifiedAt = text("verifiedAt", "검수일", true, 10);
+  const sourceLabel = text("sourceLabel", "출처명", !incompleteDraft, 120);
+  const verifiedAt = text("verifiedAt", "검수일", !incompleteDraft, 10);
   const date = new Date(`${verifiedAt}T00:00:00Z`);
   if (verifiedAt && (!/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== verifiedAt)) errors.verifiedAt = "실제 존재하는 날짜를 YYYY-MM-DD 형식으로 입력해 주세요.";
   const imageUrl = text("imageUrl", "이미지 URL", false, 500);
   if (imageUrl && !isHttpUrl(imageUrl)) errors.imageUrl = "http 또는 https 주소를 입력해 주세요.";
-  const imageRights = text("imageRights", "이미지 권리", true, 200);
+  const imageRights = text("imageRights", "이미지 권리", !incompleteDraft, 200);
   const status = text("status", "공개 상태") as ContentStatus;
   if (!statuses.includes(status)) errors.status = "공개 상태를 선택해 주세요.";
 

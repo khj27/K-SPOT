@@ -79,3 +79,17 @@ test('research format accepts actual-value header and preserves unknown fields',
   assert.throws(() => readResearchCsv('조사 항목,설명\n장소명,설명'));
   assert.throws(() => readResearchCsv(csv + '\n4,정보 출처'));
 });
+
+test('incomplete drafts preserve missing coordinates but cannot publish without evidence', () => {
+  const { validateAdminContentSpot } = load('src/lib/admin-content-validation.ts');
+  const draft = { ...sample, status: 'draft', latitude: '', longitude: null, verifiedAt: '', imageRights: '', sourceUrl: '', sourceLabel: '' };
+  const result = validateAdminContentSpot(draft, { allowIncompleteDraft: true });
+  assert.equal(result.data.latitude, null);
+  assert.equal(result.data.longitude, null);
+  assert.equal(result.data.verifiedAt, '');
+  assert.ok(!validateAdminContentSpot(draft).data);
+  const published = validateAdminContentSpot({ ...draft, status: 'published' }, { allowIncompleteDraft: true });
+  for (const field of ['latitude', 'longitude', 'verifiedAt', 'imageRights', 'sourceUrl', 'sourceLabel']) assert.ok(published.errors[field]);
+  assert.ok(!validateAdminContentSpot({ ...draft, latitude: 'bad' }, { allowIncompleteDraft: true }).data);
+  assert.ok(!validateAdminContentSpot({ ...draft, sourceUrl: 'javascript:alert(1)' }, { allowIncompleteDraft: true }).data);
+});
