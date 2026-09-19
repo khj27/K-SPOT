@@ -83,3 +83,22 @@ test('migration preserves existing server edits and invalid inputs are rejected'
   assert.throws(() => mutations.applyTravelMutation(current, { type: 'spot', id: 'a', saved: 'true' }));
   assert.throws(() => data.parseTravelBackup('{broken'));
 });
+
+test('tourism stops survive cloud save, reload, reorder and removal without changing legacy trips', async () => {
+  const app = setup();
+  const stop = { contentId: '12345', anchorId: 'a', title: '주변 관광지', address: '서울', latitude: 37.5, longitude: 127, source: 'tour-api' };
+  await app.api.storeItinerary({ ...trip, tourStops: [stop] });
+  const fresh = app.fresh(); await fresh.refreshTravel();
+  assert.equal(JSON.parse(fresh.getItinerariesSnapshot())[0].tourStops[0].title, stop.title);
+  await fresh.storeItinerary({ ...trip, placeIds: ['b', 'a'], tourStops: [stop] }, true);
+  assert.equal(JSON.parse(fresh.getItinerariesSnapshot())[0].tourStops[0].anchorId, 'a');
+  await fresh.storeItinerary({ ...trip, tourStops: [] }, true);
+  assert.equal(JSON.parse(fresh.getItinerariesSnapshot())[0].tourStops.length, 0);
+  assert.equal(data.parseTravelBackup(JSON.stringify({ ...mutations.emptyTravel(), itineraries: [trip] })).itineraries[0].tourStops, undefined);
+});
+test('reject orphaned duplicate oversized and malformed tourism stops before persistence', () => {
+  const stop = { contentId: '12345', anchorId: 'a', title: '관광지', address: '', latitude: 37.5, longitude: 127, source: 'tour-api' };
+  for (const stops of [[{ ...stop, anchorId: 'missing' }], [stop, stop], [{ ...stop, latitude: 91 }], [{ ...stop, longitude: '127' }], [{ ...stop, contentId: '../abc' }], [{ ...stop, source: 'other' }], [{ ...stop, title: '' }], Array.from({ length: 11 }, (_, n) => ({ ...stop, contentId: String(n) }))]) {
+    assert.throws(() => mutations.applyTravelMutation(empty(), { type: 'itinerary', itinerary: { ...trip, tourStops: stops } }));
+  }
+});

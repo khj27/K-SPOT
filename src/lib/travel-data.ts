@@ -1,6 +1,27 @@
+export type SavedTourStop = {
+  contentId: string; anchorId: string; title: string; address: string;
+  latitude: number; longitude: number; source: "tour-api";
+};
+
+function parseTourStops(value: unknown, placeIds: string[]): SavedTourStop[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 10) throw new Error("관광지는 일정당 최대 10곳입니다.");
+  const seen = new Set<string>();
+  return value.map((item) => {
+    if (!item || typeof item !== "object" || typeof item.contentId !== "string" || !/^\d{1,20}$/.test(item.contentId)
+      || seen.has(item.contentId) || !placeIds.includes(item.anchorId) || item.source !== "tour-api"
+      || typeof item.title !== "string" || !item.title.trim() || item.title.length > 500
+      || typeof item.address !== "string" || item.address.length > 1000
+      || !Number.isFinite(item.latitude) || item.latitude < -90 || item.latitude > 90
+      || !Number.isFinite(item.longitude) || item.longitude < -180 || item.longitude > 180) throw new Error("저장 관광지 정보가 올바르지 않습니다.");
+    seen.add(item.contentId);
+    return { contentId: item.contentId, anchorId: item.anchorId, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api" };
+  });
+}
+
 export type SavedItinerary = {
   id: string; savedAt: string; days: number; region: string;
-  transport: string; companion: string; types: string[]; placeIds: string[];
+  transport: string; companion: string; types: string[]; placeIds: string[]; tourStops?: SavedTourStop[];
 };
 
 export function parseSavedSpotIds(value: string): string[] {
@@ -40,6 +61,5 @@ export function parseTravelBackup(text: string): TravelBackup {
   const trips = parseItineraries(JSON.stringify(value.itineraries));
   if (trips.length !== value.itineraries.length || new Set(trips.map((item) => item.id)).size !== trips.length || trips.some((item) => ![item.id, item.region, item.transport, item.companion].every(string) || !Number.isFinite(Date.parse(item.savedAt)) || item.placeIds.length > 100 || !item.placeIds.every(string) || item.types.length > 20 || !item.types.every(string))) throw new Error("저장 일정에 잘못된 값 또는 중복 ID가 있습니다.");
   // Export only travel fields, never arbitrary browser or account data.
-  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds }) => ({ id, savedAt, days, region, transport, companion, types, placeIds })) };
+  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
 }
-
