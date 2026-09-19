@@ -22,40 +22,43 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
   const [itinerary, setItinerary] = useState(() => recommendations.slice(0, days));
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const itineraryId = useRef(savedId);
+  const persisted = useRef(Boolean(savedId));
 
-  function removePlace(id: string) {
-    setSaved(false); setError("");
-    setItinerary((current) => current.filter(({ place }) => place.id !== id));
+  async function removePlace(id: string) {
+    await saveItinerary(itinerary.filter(({ place }) => place.id !== id));
   }
 
-  function movePlace(index: number, direction: -1 | 1) {
+  async function movePlace(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= itinerary.length) return;
-    setSaved(false); setError("");
-    setItinerary((current) => {
-      const next = [...current];
-      [next[index], next[target]] = [next[target], next[index]];
-      return next;
-    });
+    const next = [...itinerary];
+    [next[index], next[target]] = [next[target], next[index]];
+    await saveItinerary(next);
   }
 
-  function saveItinerary() {
+  async function saveItinerary(next = itinerary) {
+    if (busy) return;
+    setBusy(true); setError("");
+    itineraryId.current ??= `itinerary-${crypto.randomUUID()}`;
     const value = {
-      id: itineraryId.current ?? `itinerary-${crypto.randomUUID()}`,
+      id: itineraryId.current,
       savedAt: new Date().toISOString(),
       days,
       region,
       transport,
       companion,
       types,
-      placeIds: itinerary.map(({ place }) => place.id),
+      placeIds: next.map(({ place }) => place.id),
     };
     try {
-      storeItinerary(value);
-      itineraryId.current = value.id;
+      await storeItinerary(value, persisted.current);
+      persisted.current = true;
+      setItinerary(next);
       setSaved(true); setError("");
     } catch (error) { setError(error instanceof Error ? error.message : "일정 저장에 실패했습니다."); }
+    finally { setBusy(false); }
   }
 
   if (itinerary.length === 0) {
@@ -72,9 +75,9 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
     <>
       <div className="planner-edit-toolbar">
         <span>{itinerary.length}개 장소 · 순서를 조정하거나 제외할 수 있어요.</span>
-        <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={saveItinerary} disabled={saved} type="button"><AppIcon name="bookmark" size={16} /> {saved ? "일정 저장됨" : savedId ? "변경사항 저장" : "일정 저장"}</button>
+        <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={() => void saveItinerary()} disabled={saved || busy} type="button"><AppIcon name="bookmark" size={16} /> {busy ? "Firebase 저장 중…" : saved ? "일정 저장됨" : "Firebase에 일정 저장"}</button>
       </div>
-      <p role="status">{error || (saved ? "이 브라우저에 일정을 저장했습니다." : "")}</p>
+      <p role="status">{error || (saved ? "Firebase에 일정을 저장했습니다." : "로그인 후 저장할 수 있으며 순서 변경·삭제도 바로 Firebase에 반영됩니다.")}</p>
       {itinerary.length < days && <p>선택한 {days}일 중 {itinerary.length}일에만 장소가 있습니다. 나머지 날짜는 자유 일정입니다.</p>}
       <div className="planner-itinerary">
         {itinerary.map(({ place, score, reasons }, index) => (
@@ -82,7 +85,7 @@ export function PlannerItineraryEditor({ recommendations, days, region, transpor
             <div className="planner-day-label"><strong>DAY {index + 1}</strong><span>{index === 0 ? "여행 시작" : index === itinerary.length - 1 ? "여행 마무리" : "로컬 탐방"}</span></div>
             <div className="planner-stop"><div className={`planner-stop-visual visual-${place.visual}`}>{place.title.slice(0, 1)}</div><div className="planner-stop-content"><p><AppIcon name="pin" size={14} /> {place.region} · {place.type}</p><h2>{place.spotName}</h2><span>{place.title} · {place.episode}</span><div className="recommendation-reasons" aria-label={`추천 점수 ${score}점`}>{reasons.map((reason) => <small key={reason}>{reason}</small>)}</div><Link href={`/spots/${place.id}`}>장소 상세 <AppIcon name="arrow" size={14} /></Link></div></div>
             <div className="planner-time-note"><span>추천 체류</span><strong>{index % 2 === 0 ? "2시간" : "1시간 30분"}</strong><span>다음 장소까지 이동을 고려한 예시 일정입니다.</span></div>
-            <div className="planner-day-actions"><button onClick={() => movePlace(index, -1)} disabled={index === 0} type="button" aria-label="앞으로 이동">↑</button><button onClick={() => movePlace(index, 1)} disabled={index === itinerary.length - 1} type="button" aria-label="뒤로 이동">↓</button><button onClick={() => removePlace(place.id)} type="button" aria-label={`${place.spotName} 일정에서 삭제`}>삭제</button></div>
+            <div className="planner-day-actions"><button onClick={() => void movePlace(index, -1)} disabled={busy || index === 0} type="button" aria-label="앞으로 이동">↑</button><button onClick={() => void movePlace(index, 1)} disabled={busy || index === itinerary.length - 1} type="button" aria-label="뒤로 이동">↓</button><button onClick={() => void removePlace(place.id)} disabled={busy} type="button" aria-label={`${place.spotName} 일정에서 삭제`}>삭제</button></div>
           </article>
         ))}
       </div>

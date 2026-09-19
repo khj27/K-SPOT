@@ -44,7 +44,7 @@ test('reads and writes are always scoped to authenticated UID', async () => {
   assert.equal(result.headers.get('cache-control'), 'private, no-store');
   assert.equal((await result.json()).backup.spots[0], 'test-spot');
   app.setIdentity({ uid: 'bob' });
-  assert.equal((await (await app.route.GET()).json()).backup, null);
+  assert.equal((await (await app.route.GET()).json()).backup.spots.length, 0);
 });
 test('stale revision cannot overwrite newer cloud data', async () => {
   const app = setup(); app.setIdentity({ uid: 'alice' });
@@ -58,4 +58,28 @@ test('oversized body is rejected without a write', async () => {
   const req = new Request('http://localhost:3000/api/account/travel', { method: 'PUT', headers: { origin: 'http://localhost:3000' }, body: 'x'.repeat(450001) });
   assert.equal((await app.route.PUT(req)).status, 400);
   assert.equal(app.docs.size, 0);
+});
+
+function patch(uid, action, origin = 'http://localhost:3000') {
+  return new Request('http://localhost:3000/api/account/travel', { method: 'PATCH', headers: { origin }, body: JSON.stringify({ uid, action }) });
+}
+test('automatic mutations enforce authentication origin and ownership', async () => {
+  const app = setup();
+  const action = { type: 'spot', id: 'a', saved: true };
+  assert.equal((await app.route.PATCH(patch('alice', action))).status, 401);
+  app.setIdentity({ uid: 'alice' });
+  assert.equal((await app.route.PATCH(patch('bob', action))).status, 409);
+  assert.equal((await app.route.PATCH(patch('alice', action, 'https://evil.test'))).status, 403);
+  assert.equal(app.docs.size, 0);
+});
+test('automatic mutations update latest document and preserve unrelated records', async () => {
+  const app = setup(); app.setIdentity({ uid: 'alice' });
+  await app.route.PATCH(patch('alice', { type: 'spot', id: 'a', saved: true }));
+  await app.route.PATCH(patch('alice', { type: 'spot', id: 'b', saved: true }));
+  const result = await app.route.PATCH(patch('alice', { type: 'view', id: 'a' }));
+  assert.equal(result.status, 200);
+  assert.equal(app.docs.get('alice').backup.spots.length, 2);
+  assert.equal(app.docs.get('alice').recentViews[0].spotId, 'a');
+  await app.route.PATCH(patch('alice', { type: 'spot', id: 'a', saved: false }));
+  assert.equal(app.docs.get('alice').backup.spots[0], 'b');
 });

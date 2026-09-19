@@ -397,3 +397,5 @@ body {
 .recommend-filter select { padding: 12px; border: 1px solid var(--kspot-line); border-radius: 8px; font: inherit; background: white; }
 .account-panel { margin-bottom: 24px; }
 .account-panel button:disabled { opacity: .5; cursor: not-allowed; }
+.travel-sync-status { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px 24px; font-size: 12px; background: var(--kspot-primary-soft); line-height: 1.5; }
+.travel-sync-status button, .travel-sync-status a { text-decoration: underline; }

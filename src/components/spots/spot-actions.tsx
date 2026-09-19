@@ -1,24 +1,24 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 
 import { AppIcon } from "@/components/common/app-icon";
 
-import { SAVED_SPOTS_KEY, subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, writeTravelStorage } from "@/lib/travel-storage";
+import { subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, setSpotSaved, recordViewedSpot, isTravelSignedIn } from "@/lib/travel-storage";
 
 export function SpotActions({ spotId }: { spotId: string }) {
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
   const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot);
   const saved = parseSavedSpotIds(savedSpotsSnapshot).includes(spotId);
 
-  function toggleSaved() {
-    const savedSpots = parseSavedSpotIds(getSavedSpotsSnapshot());
-    const nextSaved = savedSpots.includes(spotId)
-      ? savedSpots.filter((id) => id !== spotId)
-      : [...savedSpots, spotId];
-
-    try { writeTravelStorage(SAVED_SPOTS_KEY, nextSaved); setMessage(saved ? "저장을 해제했습니다." : "이 브라우저에 장소를 저장했습니다."); }
+  useEffect(() => { if (isTravelSignedIn()) void recordViewedSpot(spotId).catch(() => { /* The global sync status displays failure. */ }); }, [spotId]);
+  async function toggleSaved() {
+    setBusy(true);
+    try { await setSpotSaved(spotId, !saved); setMessage(saved ? "Firebase에서 찜을 해제했습니다." : "Firebase에 장소를 저장했습니다."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "저장에 실패했습니다."); }
+    finally { setBusy(false); }
   }
 
   async function shareSpot() {
@@ -38,13 +38,14 @@ export function SpotActions({ spotId }: { spotId: string }) {
 
   return (
     <div className="spot-actions">
-      <button className={saved ? "spot-action is-saved" : "spot-action"} onClick={toggleSaved} type="button" aria-pressed={saved}>
+      <button className={saved ? "spot-action is-saved" : "spot-action"} onClick={toggleSaved} disabled={busy} type="button" aria-pressed={saved}>
         <AppIcon name="bookmark" size={18} /> {saved ? "저장됨" : "장소 저장"}
       </button>
       <button className="spot-action spot-action-secondary" onClick={shareSpot} type="button">
         <AppIcon name="share" size={18} /> 공유
       </button>
       <p className="spot-action-message" role="status">{message}</p>
+      {message.includes("로그인") && <Link href="/login">로그인하기</Link>}
     </div>
   );
 }

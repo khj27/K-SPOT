@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import { AppIcon } from "@/components/common/app-icon";
 import type { ExploreContent } from "@/types/content";
 import { PlannerItineraryEditor } from "@/components/planner/planner-itinerary-editor";
-import { SAVED_ITINERARIES_KEY, subscribeToItineraries, getItinerariesSnapshot, getEmptySnapshot, parseItineraries, writeTravelStorage } from "@/lib/travel-storage";
+import { subscribeToItineraries, getItinerariesSnapshot, getEmptySnapshot, parseItineraries, removeSavedItinerary } from "@/lib/travel-storage";
 
 export function SavedItinerariesList({ contents }: { contents: ExploreContent[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -19,10 +19,9 @@ export function SavedItinerariesList({ contents }: { contents: ExploreContent[] 
   const missingCount = selected ? selected.placeIds.length - selectedPlaces.length : 0;
   if (itineraries.length === 0) return null;
 
-  function removeItinerary(id: string) {
+  async function removeItinerary(id: string) {
     try {
-      const next = parseItineraries(getItinerariesSnapshot()).filter((item) => item.id !== id);
-      writeTravelStorage(SAVED_ITINERARIES_KEY, next); setError("");
+      await removeSavedItinerary(id); setError("");
       if (selectedId === id) setSelectedId(null);
     } catch (error) { setError(error instanceof Error ? error.message : "삭제에 실패했습니다."); }
   }

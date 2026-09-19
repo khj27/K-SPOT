@@ -18,7 +18,7 @@ export default async function SavedPage() {
       </section>
       <SavedItinerariesList contents={contents} />
       <SavedSpotsList contents={contents} />
-      <p className="saved-data-notice">현재 브라우저에 저장된 자료입니다. 마이페이지에서 로그인 후 계정에 보관하거나 다른 기기의 자료를 가져올 수 있습니다.</p>
+      <p className="saved-data-notice">로그인 계정의 Firebase 자료입니다. 찜·일정 변경은 바로 저장되고 다른 기기에서도 같은 계정으로 확인할 수 있습니다.</p>
     </main>
   );
 }

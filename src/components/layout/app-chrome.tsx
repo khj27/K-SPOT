@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { PublicSidebar } from "@/components/layout/public-sidebar";
 import { TopSearch } from "@/components/layout/top-search";
+import { TravelSyncStatus } from "@/components/account/travel-sync-status";
 
 export function AppChrome({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
@@ -15,6 +16,7 @@ export function AppChrome({ children }: Readonly<{ children: React.ReactNode }>)
       <PublicSidebar />
       <div className="public-app-content">
         <TopSearch />
+        <TravelSyncStatus />
         {children}
       </div>
     </div>

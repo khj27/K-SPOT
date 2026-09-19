@@ -40,7 +40,7 @@ export function UserLoginForm({ configured }: { configured: boolean }) {
     {mode === "signup" && <label>이름 또는 닉네임<input name="name" autoComplete="nickname" required maxLength={60} /></label>}
     <label>이메일<input name="email" type="email" autoComplete="username" required maxLength={254} /></label>
     {mode !== "reset" && <label>비밀번호<input name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : 6} required maxLength={128} /></label>}
-    {mode === "signup" && <><label>비밀번호 확인<input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p>계정 인증은 Firebase가 처리합니다. 이메일과 닉네임은 계정 식별에 사용하며, 여행 자료는 직접 계정 저장을 누를 때 업로드합니다.</p></>}
+    {mode === "signup" && <><label>비밀번호 확인<input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p>계정 인증은 Firebase가 처리합니다. 로그인 후 찜·일정·최근 본 장소는 본인 계정의 Firebase에 저장됩니다.</p></>}
     <button className="kspot-primary-button" disabled={busy || !configured} type="submit">{busy ? "처리 중…" : mode === "login" ? "로그인하기" : mode === "signup" ? "계정 만들기" : "재설정 메일 보내기"}</button>
     <p role="status">{!configured ? "Firebase 설정이 필요합니다." : message}</p></form></section>;
 }

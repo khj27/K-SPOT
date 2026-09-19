@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { getUserIdentity } from "@/lib/firebase/user-session";
 import { getFirebaseAdminDb } from "@/lib/firebase/admin";
 import { isSameOrigin, readAccountJson } from "@/lib/account-validation";
-import { parseTravelBackup } from "@/lib/travel-storage";
+import { parseTravelBackup } from "@/lib/travel-data";
+import { applyTravelMutation, emptyTravel } from "@/lib/travel-mutations";
 
 const headers = { "Cache-Control": "private, no-store" };
 export async function GET() {
@@ -10,7 +11,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ message: "로그인이 필요합니다." }, { status: 401, headers });
   try {
     const doc = await getFirebaseAdminDb().collection("userTravel").doc(user.uid).get();
-    return NextResponse.json({ uid: user.uid, revision: doc.data()?.revision ?? 0, backup: doc.data()?.backup ?? null }, { headers });
+    return NextResponse.json({ uid: user.uid, revision: doc.data()?.revision ?? 0, backup: doc.data()?.backup ?? emptyTravel(), recentViews: doc.data()?.recentViews ?? [] }, { headers });
   } catch { return NextResponse.json({ message: "계정 자료를 불러오지 못했습니다." }, { status: 503, headers }); }
 }
 export async function PUT(request: Request) {
@@ -32,11 +33,39 @@ export async function PUT(request: Request) {
       const current = await transaction.get(ref);
       const revision = current.data()?.revision ?? 0;
       if (revision !== body.revision) throw new Error("CONFLICT");
-      transaction.set(ref, { backup: body.backup, revision: revision + 1, updatedAt: new Date().toISOString() });
+      transaction.set(ref, { backup: body.backup, recentViews: current.data()?.recentViews ?? [], revision: revision + 1, updatedAt: new Date().toISOString() });
       return revision + 1;
     });
     return NextResponse.json({ revision }, { headers });
   } catch (error) {
     return NextResponse.json({ message: error instanceof Error && error.message === "CONFLICT" ? "다른 기기에서 자료가 변경되었습니다. 계정 자료를 다시 확인한 뒤 저장해 주세요." : "저장하지 못했습니다. 계정 자료를 다시 확인해 주세요." }, { status: error instanceof Error && error.message === "CONFLICT" ? 409 : 503, headers });
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ message: "허용되지 않은 요청입니다." }, { status: 403, headers });
+  const user = await getUserIdentity();
+  if (!user) return NextResponse.json({ message: "로그인 후 저장할 수 있습니다." }, { status: 401, headers });
+  let body: { uid?: string; action?: unknown };
+  try {
+    body = await readAccountJson(request) as typeof body;
+    if (!body || body.uid !== user.uid) return NextResponse.json({ message: "계정이 변경되었습니다. 새로고침해 주세요." }, { status: 409, headers });
+    // Validate before opening a transaction (existence checks use the actual document below).
+    const action = body.action as Record<string, unknown>;
+    applyTravelMutation({ backup: emptyTravel(), recentViews: [], revision: 0 }, action?.type === "itinerary" ? { ...action, existing: false } : action);
+  } catch { return NextResponse.json({ message: "저장할 자료의 형식 또는 크기가 올바르지 않습니다." }, { status: 400, headers }); }
+  try {
+    const db = getFirebaseAdminDb();
+    const ref = db.collection("userTravel").doc(user.uid);
+    const result = await db.runTransaction(async (transaction) => {
+      const current = (await transaction.get(ref)).data();
+      const result = applyTravelMutation({ backup: current?.backup ?? emptyTravel(), recentViews: current?.recentViews ?? [], revision: current?.revision ?? 0 }, body.action);
+      transaction.set(ref, { ...result, updatedAt: new Date().toISOString() });
+      return result;
+    });
+    return NextResponse.json({ uid: user.uid, ...result }, { headers });
+  } catch (error) {
+    const removed = error instanceof Error && error.message === "ITINERARY_REMOVED";
+    return NextResponse.json({ message: removed ? "다른 기기에서 삭제된 일정입니다. 목록을 새로고침해 주세요." : "Firebase에 저장하지 못했습니다. 연결을 확인한 후 다시 시도해 주세요." }, { status: removed ? 409 : 503, headers });
   }
 }

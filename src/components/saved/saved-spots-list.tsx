@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import { AppIcon } from "@/components/common/app-icon";
 import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import type { ExploreContent } from "@/types/content";
-import { SAVED_SPOTS_KEY, subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, writeTravelStorage } from "@/lib/travel-storage";
+import { subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, setSpotSaved } from "@/lib/travel-storage";
 
 export function SavedSpotsList({ contents }: { contents: ExploreContent[] }) {
   const [error, setError] = useState("");
@@ -29,10 +29,9 @@ export function SavedSpotsList({ contents }: { contents: ExploreContent[] }) {
     );
   }
 
-  function removeSaved(id: string) {
+  async function removeSaved(id: string) {
     try {
-      const nextIds = parseSavedSpotIds(getSavedSpotsSnapshot()).filter((savedId) => savedId !== id);
-      writeTravelStorage(SAVED_SPOTS_KEY, nextIds); setError("");
+      await setSpotSaved(id, false); setError("");
     } catch (error) { setError(error instanceof Error ? error.message : "저장 해제에 실패했습니다."); }
   }
 
