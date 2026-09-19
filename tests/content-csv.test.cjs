@@ -65,7 +65,7 @@ test('actual Parasite research sheet maps to one editable place without invented
   assert.equal(input.slug, readResearchCsv(csv).slug);
   const missing = inspectContentCsv(serializeContentCsv(input));
   assert.equal(missing.length, 1);
-  assert.equal(missing[0].errors.length, 4);
+  assert.equal(missing[0].errors.length, 3);
   const completed = inspectContentCsv(serializeContentCsv({ ...input, latitude: '37.5', longitude: '127', verifiedAt: '2026-09-18', imageRights: '테스트용 권리 기록' }));
   assert.equal(completed[0].errors.length, 0);
   assert.equal(completed[0].data.status, 'draft');
@@ -89,7 +89,19 @@ test('incomplete drafts preserve missing coordinates but cannot publish without 
   assert.equal(result.data.verifiedAt, '');
   assert.ok(!validateAdminContentSpot(draft).data);
   const published = validateAdminContentSpot({ ...draft, status: 'published' }, { allowIncompleteDraft: true });
-  for (const field of ['latitude', 'longitude', 'verifiedAt', 'imageRights', 'sourceUrl', 'sourceLabel']) assert.ok(published.errors[field]);
+  for (const field of ['latitude', 'longitude', 'verifiedAt', 'sourceUrl', 'sourceLabel']) assert.ok(published.errors[field]);
   assert.ok(!validateAdminContentSpot({ ...draft, latitude: 'bad' }, { allowIncompleteDraft: true }).data);
   assert.ok(!validateAdminContentSpot({ ...draft, sourceUrl: 'javascript:alert(1)' }, { allowIncompleteDraft: true }).data);
+});
+
+test('image attribution is optional for publishing and CSV while evidence stays required', () => {
+  const { validateAdminContentSpot } = load('src/lib/admin-content-validation.ts');
+  for (const imageRights of ['', undefined]) {
+    const result = validateAdminContentSpot({ ...sample, imageRights });
+    assert.equal(result.data.status, 'published');
+    assert.equal(result.data.imageRights, '');
+    assert.equal(inspect({ imageRights }).errors.length, 0);
+  }
+  assert.equal(validateAdminContentSpot(sample).data.imageRights, sample.imageRights);
+  assert.ok(validateAdminContentSpot({ ...sample, sourceUrl: '', imageRights: '' }).errors.sourceUrl);
 });

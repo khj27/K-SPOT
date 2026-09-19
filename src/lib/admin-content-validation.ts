@@ -47,7 +47,7 @@ export function validateAdminContentSpot(value: unknown, options: { allowIncompl
   if (verifiedAt && (!/^\d{4}-\d{2}-\d{2}$/.test(verifiedAt) || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== verifiedAt)) errors.verifiedAt = "실제 존재하는 날짜를 YYYY-MM-DD 형식으로 입력해 주세요.";
   const imageUrl = text("imageUrl", "이미지 URL", false, 500);
   if (imageUrl && !isHttpUrl(imageUrl)) errors.imageUrl = "http 또는 https 주소를 입력해 주세요.";
-  const imageRights = text("imageRights", "이미지 권리", !incompleteDraft, 200);
+  const imageRights = text("imageRights", "이미지 출처·사용 근거", false, 200);
   const status = text("status", "공개 상태") as ContentStatus;
   if (!statuses.includes(status)) errors.status = "공개 상태를 선택해 주세요.";
 

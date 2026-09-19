@@ -6,7 +6,7 @@
 
 파일 선택 후 변환 내용이 편집 화면에 나타납니다. 장소명·미디어 제목·주소·유형·공개연도·배우·등장 장면·정보 출처를 자동 연결합니다. 지역은 주소 앞 두 단어로 제안하며 고유 주소는 작품명과 장소명으로 생성하므로 저장 전에 확인해 주세요.
 
-좌표·검수일·이미지 권리는 파일에 없으면 비워 두며 화면에서 실제 확인한 값을 보완해야 저장됩니다. 조사 항목으로 `위도`, `경도`, `검수일`, `이미지 권리`, `고유 주소`, `지역`을 추가해 미리 작성할 수도 있습니다.
+좌표·검수일은 파일에 없으면 화면에서 실제 확인한 값을 보완해야 저장됩니다. 이미지 출처·사용 근거는 선택 항목이며 imageRights 열은 빈 값으로 둘 수 있습니다. 조사 항목으로 `위도`, `경도`, `검수일`, `이미지 권리`, `고유 주소`, `지역`을 추가해 미리 작성할 수도 있습니다.
 
 대표 이미지가 기사 페이지이면 이미지로 사용하지 않습니다. 직접 이미지 파일 주소만 이미지로 연결하며 나머지 조사 정보(태그·이미지 참고·장소 유형 등)는 장소 소개에 보존합니다. 소개 800자·장면 80자 등 기존 검증 제한을 초과하면 미리보기에서 알려주므로 편집 후 다시 검사해 주세요. 유튜브 정보 출처가 있으면 기존 썸네일 기능이 적용됩니다.
 
@@ -18,7 +18,7 @@
 4. 파일 선택 → 미리보기 및 검사 → 정상 항목 초안 저장 순으로 진행합니다.
 5. `/admin/spots`에서 저장된 초안을 확인하고 공개 상태로 변경합니다.
 
-필수 열: slug, contentTitle, contentType, episode, description, spotName, region, address, latitude, longitude, sourceUrl, sourceLabel, verifiedAt, imageRights.
+필수 열: slug, contentTitle, contentType, episode, description, spotName, region, address, latitude, longitude, sourceUrl, sourceLabel, verifiedAt.
 선택 값: creator, releaseYear, imageUrl. status 열은 유지하되 어떤 값을 넣어도 draft로 저장됩니다.
 contentType은 개별 등록 화면의 콘텐츠 유형과 동일합니다. verifiedAt은 실제 날짜 YYYY-MM-DD를 입력합니다.
 imageUrl이 비어 있고 sourceUrl이 지원되는 유튜브 영상 주소이면 썸네일이 표시됩니다.

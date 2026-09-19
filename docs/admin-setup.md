@@ -40,7 +40,7 @@ firebase deploy --only firestore:rules
 
 1. 개발 서버를 다시 시작한다.
 2. `/admin/login`에서 `ADMIN_EMAILS`에 넣은 Firebase 계정으로 로그인한다.
-3. `/admin/spots/new`에서 근거 URL, 검수일, 이미지 권리를 포함해 등록한다.
+3. `/admin/spots/new`에서 근거 URL과 검수일을 포함해 등록한다. 이미지 출처·사용 근거는 선택 항목이다.
 4. `임시 저장` 데이터는 관리자 목록에만 나타난다.
 5. `즉시 공개`로 바꾸면 홈, 탐색, 지도, 상세, 추천 후보에 표시된다.
 

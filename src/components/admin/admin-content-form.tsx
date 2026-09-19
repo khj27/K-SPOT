@@ -48,7 +48,7 @@ export function AdminContentForm({ initial }: Props) {
   const field = (name: string) => errors[name] ? <small className="admin-field-error">{errors[name]}</small> : null;
   return (
     <form className="admin-content-form" onSubmit={submit} noValidate>
-      <p>좌표·출처·검수일·이미지 권리가 미확인인 자료는 임시 저장할 수 있습니다. 즉시 공개하려면 모든 필수 정보를 보완해야 합니다.</p>
+      <p>좌표·출처·검수일이 미확인인 자료는 임시 저장할 수 있습니다. 즉시 공개하려면 모든 필수 정보를 보완해야 합니다. 이미지 출처·사용 근거는 선택 항목입니다.</p>
       {initial?.researchImport && <section className="admin-form-section"><h2>가져온 조사 자료: {initial.researchImport.sheetName}</h2><a href={initial.researchImport.spreadsheetUrl} target="_blank" rel="noreferrer">원본 스프레드시트</a><ul>{initial.researchImport.notes.map((note) => <li key={note}>{note}</li>)}</ul><details><summary>원본 조사 항목 전체 보기</summary><dl>{initial.researchImport.rows.map((row, index) => <div key={index}><dt><strong>{row.label}</strong></dt><dd style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{row.value}{row.links.map((url) => <p key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></p>)}</dd></div>)}</dl></details></section>}
       <section className="admin-form-section">
         <div><p>CONTENT</p><h2>콘텐츠 정보</h2></div>
@@ -82,7 +82,7 @@ export function AdminContentForm({ initial }: Props) {
           <label className="admin-field-wide"><span>근거 URL · 유튜브 영상 주소 *</span><input name="sourceUrl" type="url" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} required />{field("sourceUrl")}<small>유튜브 영상·공유 링크·Shorts 주소를 넣으면 썸네일이 자동 표시됩니다.</small></label>
           <label className="admin-field-wide"><span>대표 이미지 또는 유튜브 주소 (선택)</span><input name="imageUrl" type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />{field("imageUrl")}<small>입력하면 근거 URL의 썸네일 대신 사용합니다. 다른 사이트는 이미지 파일 주소를 입력하세요.</small></label>
           {thumbnail && <div className="admin-field-wide"><p>썸네일 미리보기</p><div className="admin-thumbnail-preview"><ContentThumbnail src={thumbnail} title={initial?.contentTitle ?? "콘텐츠"} /></div></div>}
-          <label className="admin-field-wide"><span>이미지 권리 *</span><input name="imageRights" defaultValue={initial?.imageRights} placeholder="예: 한국관광공사 공공누리 제1유형" required />{field("imageRights")}</label>
+          <label className="admin-field-wide"><span>이미지 출처·사용 근거 (선택)</span><input name="imageRights" defaultValue={initial?.imageRights} placeholder="예: 직접 촬영, 이미지 제공처" />{field("imageRights")}</label>
           <label><span>공개 상태 *</span><select name="status" defaultValue={initial?.status ?? "draft"}><option value="draft">임시 저장</option><option value="published">즉시 공개</option></select>{field("status")}</label>
         </div>
       </section>
