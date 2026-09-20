@@ -31,7 +31,7 @@ export function PlannerItineraryEditor({ recommendations, candidates = recommend
     itineraryId.current ??= `itinerary-${crypto.randomUUID()}`;
     try {
       await storeItinerary({ id: itineraryId.current, savedAt: new Date().toISOString(), days, region, transport, companion, types, placeIds: next.map(({ place }) => place.id), placeDays: next.map(({ day }) => day), tourStops: validStops, ...(startDate && endDate ? { startDate, endDate } : {}) }, persisted.current);
-      persisted.current = true; setSaved(true); setItinerary(next); setTourStops(validStops); setMessage("Firebase에 일정을 저장했습니다.");
+      persisted.current = true; setSaved(true); setItinerary(next); setTourStops(validStops); setMessage("일정을 저장했습니다.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "저장하지 못했습니다. 다시 시도해 주세요."); }
     finally { setBusy(false); }
   }
@@ -53,7 +53,7 @@ export function PlannerItineraryEditor({ recommendations, candidates = recommend
   const remaining = candidates.filter(({ place }) => !itinerary.some((stop) => stop.place.id === place.id));
   return <>
     <div className="planner-edit-toolbar"><span>{days}일 · 촬영지 {itinerary.length}곳 · 주변 관광지 {tourStops.length}곳</span><button className={`planner-save-button ${saved ? "is-saved" : ""}`} type="button" aria-pressed={saved} disabled={busy} onClick={() => void toggleSaved()}>{busy ? "처리 중…" : saved ? "일정 저장됨 · 저장 취소" : "일정 저장"}</button></div>
-    <p role="status">{message || (saved ? "수정 내용은 Firebase에 자동 저장됩니다." : "날짜별 장소를 조정하고 로그인 후 저장하세요.")}</p>
+    <p role="status">{message || (saved ? "수정한 내용은 자동으로 저장됩니다." : "날짜별 장소를 조정하고 로그인 후 저장하세요.")}</p>
     <nav className="trip-day-nav" aria-label="일정 날짜">{Array.from({ length: days }, (_, day) => <a key={day} href={`#trip-day-${day + 1}`}>DAY {day + 1}{startDate ? ` · ${dayDate(startDate, day).slice(5)}` : ""}</a>)}</nav>
     <div className="trip-days">{Array.from({ length: days }, (_, day) => {
       const stops = itinerary.filter((stop) => stop.day === day);

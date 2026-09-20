@@ -48,10 +48,10 @@ export function AdminContentForm({ initial }: Props) {
   const field = (name: string) => errors[name] ? <small className="admin-field-error">{errors[name]}</small> : null;
   return (
     <form className="admin-content-form" onSubmit={submit} noValidate>
-      <p>좌표·출처·검수일이 미확인인 자료는 임시 저장할 수 있습니다. 즉시 공개하려면 모든 필수 정보를 보완해야 합니다. 이미지 출처·사용 근거는 선택 항목입니다.</p>
-      {initial?.researchImport && <section className="admin-form-section"><h2>가져온 조사 자료: {initial.researchImport.sheetName}</h2><a href={initial.researchImport.spreadsheetUrl} target="_blank" rel="noreferrer">원본 스프레드시트</a><ul>{initial.researchImport.notes.map((note) => <li key={note}>{note}</li>)}</ul><details><summary>원본 조사 항목 전체 보기</summary><dl>{initial.researchImport.rows.map((row, index) => <div key={index}><dt><strong>{row.label}</strong></dt><dd style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{row.value}{row.links.map((url) => <p key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></p>)}</dd></div>)}</dl></details></section>}
+      <p className="admin-form-help">*는 공개에 필요한 항목입니다. 미확인 자료는 임시 저장하고 나중에 보완할 수 있습니다.</p>
+      {initial?.researchImport && <details className="admin-research"><summary>가져온 조사 자료 · {initial.researchImport.sheetName}</summary><a href={initial.researchImport.spreadsheetUrl} target="_blank" rel="noreferrer">원본 스프레드시트</a><ul>{initial.researchImport.notes.map((note) => <li key={note}>{note}</li>)}</ul><details><summary>원본 조사 항목 전체 보기</summary><dl>{initial.researchImport.rows.map((row, index) => <div key={index}><dt><strong>{row.label}</strong></dt><dd style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{row.value}{row.links.map((url) => <p key={url}><a href={url} target="_blank" rel="noreferrer">{url}</a></p>)}</dd></div>)}</dl></details></details>}
       <section className="admin-form-section">
-        <div><p>CONTENT</p><h2>콘텐츠 정보</h2></div>
+        <div><p>CONTENT</p><h2>01 · 콘텐츠 정보</h2></div>
         <div className="admin-form-grid">
           <label><span>콘텐츠명 *</span><input name="contentTitle" defaultValue={initial?.contentTitle} required />{field("contentTitle")}</label>
           <label><span>콘텐츠 유형 *</span><select name="contentType" defaultValue={initial?.contentType ?? "드라마"}>{exploreTypes.filter((type) => type !== "전체").map((type) => <option key={type}>{type}</option>)}</select>{field("contentType")}</label>
@@ -64,7 +64,7 @@ export function AdminContentForm({ initial }: Props) {
       </section>
 
       <section className="admin-form-section">
-        <div><p>PLACE</p><h2>관광 장소</h2></div>
+        <div><p>PLACE</p><h2>02 · 관광 장소</h2></div>
         <div className="admin-form-grid">
           <label><span>장소명 *</span><input name="spotName" defaultValue={initial?.spotName} required />{field("spotName")}</label>
           <label><span>지역 *</span><input name="region" defaultValue={initial?.region} placeholder="예: 부산" required />{field("region")}</label>
@@ -75,7 +75,7 @@ export function AdminContentForm({ initial }: Props) {
       </section>
 
       <section className="admin-form-section">
-        <div><p>EVIDENCE</p><h2>근거와 권리</h2></div>
+        <div><p>EVIDENCE</p><h2>03 · 출처와 공개 설정</h2></div>
         <div className="admin-form-grid">
           <label><span>출처명 *</span><input name="sourceLabel" defaultValue={initial?.sourceLabel} placeholder="예: 부산영상위원회" required />{field("sourceLabel")}</label>
           <label><span>검수일 *</span><input name="verifiedAt" type="date" defaultValue={initial?.verifiedAt ?? ""} required />{field("verifiedAt")}</label>

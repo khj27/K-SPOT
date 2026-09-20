@@ -42,11 +42,11 @@ export function UserLoginForm({ configured }: { configured: boolean }) {
       try { await signOut(getFirebaseUserAuth()); } catch { /* Keep the original user-facing error. */ }
     } finally { setBusy(false); }
   }
-  return <section className="travel-backup"><div className="admin-csv-actions">{(["login", "signup", "reset"] as const).map((value) => <button type="button" key={value} disabled={busy} aria-pressed={mode === value} onClick={() => { setMode(value); setMessage(""); }}>{value === "login" ? "로그인" : value === "signup" ? "회원가입" : "비밀번호 재설정"}</button>)}</div><form key={mode} className="admin-login-form" onSubmit={submit}>
+  return <section className="travel-backup auth-card"><div className="auth-mode-switch" role="group" aria-label="계정 메뉴">{(["login", "signup", "reset"] as const).map((value) => <button type="button" key={value} disabled={busy} aria-pressed={mode === value} onClick={() => { setMode(value); setMessage(""); }}>{value === "login" ? "로그인" : value === "signup" ? "회원가입" : "비밀번호 재설정"}</button>)}</div><div className="auth-mode-heading"><h2>{mode === "login" ? "다시 만나서 반가워요" : mode === "signup" ? "나의 여행을 모아보세요" : "비밀번호를 잊으셨나요?"}</h2><p>{mode === "login" ? "이메일과 비밀번호로 로그인하세요." : mode === "signup" ? "간단한 가입 후 장소와 일정을 저장할 수 있어요." : "가입한 이메일로 재설정 안내를 보내드립니다."}</p></div><form key={mode} className="admin-login-form" onSubmit={submit}>
     {mode === "signup" && <label>이름 또는 닉네임<input name="name" autoComplete="nickname" required maxLength={60} /></label>}
     <label>이메일<input name="email" type="email" autoComplete="username" required maxLength={254} /></label>
     {mode !== "reset" && <label>비밀번호<input name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : 6} required maxLength={128} /></label>}
-    {mode === "signup" && <><label>비밀번호 확인<input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p>계정 인증은 Firebase가 처리합니다. 로그인 후 찜·일정·최근 본 장소는 본인 계정의 Firebase에 저장됩니다.</p></>}
+    {mode === "signup" && <><label>비밀번호 확인<input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p>저장한 장소와 일정은 같은 계정으로 다른 기기에서도 확인할 수 있습니다.</p></>}
     <button className="kspot-primary-button" disabled={busy || !configured} type="submit">{busy ? "처리 중…" : mode === "login" ? "로그인하기" : mode === "signup" ? "계정 만들기" : "재설정 메일 보내기"}</button>
-    <p role="status">{!configured ? "Firebase 설정이 필요합니다." : message}</p></form></section>;
+    <p className="form-feedback" role="status">{!configured ? "Firebase 설정이 필요합니다." : message}</p></form></section>;
 }

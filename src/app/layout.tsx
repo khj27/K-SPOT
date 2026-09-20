@@ -5,6 +5,7 @@ import { getUserIdentity } from "@/lib/firebase/user-session";
 
 import "./globals.css";
 import "./kspot.css";
+import "./ui-polish.css";
 
 export const metadata: Metadata = {
   title: {

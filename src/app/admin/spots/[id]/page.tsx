@@ -12,5 +12,5 @@ export default async function AdminSpotPage({ params }: AdminSpotPageProps) {
   const { id } = await params;
   const item = await getAdminContentSpot(id);
   if (!item) notFound();
-  return <main className="admin-page"><Link className="admin-back" href="/admin/spots">← 콘텐츠 장소 관리</Link><section className="admin-heading"><div><p className="kspot-eyebrow">ADMIN · EDIT</p><h1>{item.contentTitle}</h1><p>{item.spotName} 데이터와 공개 상태를 수정합니다.</p></div><Link href={`/spots/${item.slug}`}>공개 페이지 보기</Link></section><AdminContentForm initial={item} /></main>;
+  return <main className="admin-page"><Link className="admin-back" href="/admin/spots">← 콘텐츠 장소 관리</Link><section className="admin-heading"><div><p className="kspot-eyebrow">ADMIN · EDIT</p><h1>콘텐츠 장소 수정</h1><p><strong>{item.spotName}</strong><br />{item.contentTitle}</p></div><Link className="ui-button" href={`/spots/${item.slug}`}>공개 페이지 보기</Link></section><AdminContentForm initial={item} /></main>;
 }
