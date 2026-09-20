@@ -1,5 +1,12 @@
 export function isSameOrigin(request: Request) {
-  return request.headers.get("origin") === new URL(request.url).origin;
+  // Render terminates HTTPS before forwarding to the internal Next.js server.
+  // Trust the configured public URL, never caller-controlled forwarded headers.
+  const publicUrl = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL;
+  try {
+    const expected = new URL(publicUrl || request.url);
+    if (!['http:', 'https:'].includes(expected.protocol)) return false;
+    return request.headers.get("origin") === expected.origin;
+  } catch { return false; }
 }
 export async function readAccountJson(request: Request, maxBytes = 450_000): Promise<unknown> {
   const reader = request.body?.getReader();

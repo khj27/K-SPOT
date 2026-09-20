@@ -3,11 +3,12 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminIdentity } from "@/lib/firebase/session";
 import { getFirebaseAdminDb } from "@/lib/firebase/admin";
 import { CSV_MAX_BYTES, inspectContentCsv } from "@/lib/content-csv";
+import { isSameOrigin } from "@/lib/account-validation";
 
 export async function POST(request: Request) {
   const admin = await getAdminIdentity();
   if (!admin) return NextResponse.json({ message: "관리자 로그인이 필요합니다." }, { status: 401 });
-  if (request.headers.get("origin") !== new URL(request.url).origin) return NextResponse.json({ message: "허용되지 않은 요청입니다." }, { status: 403 });
+  if (!isSameOrigin(request)) return NextResponse.json({ message: "허용되지 않은 요청입니다." }, { status: 403 });
   // Bound the stream itself, not only the caller-controlled Content-Length.
   const reader = request.body?.getReader();
   if (!reader) return NextResponse.json({ message: "CSV 데이터가 없습니다." }, { status: 400 });

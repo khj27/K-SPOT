@@ -15,7 +15,7 @@ function setup() {
   function load(file) {
     const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
     const exports = {};
-    vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports, Request, Response, TextEncoder, TextDecoder, URL, require: (id) => overrides[id] ?? load(id.replace('@/', 'src/') + '.ts') });
+    vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports, process: { env: {} }, Request, Response, TextEncoder, TextDecoder, URL, require: (id) => overrides[id] ?? load(id.replace('@/', 'src/') + '.ts') });
     return exports;
   }
   return { route: load('src/app/api/account/travel/route.ts'), setIdentity(value) { identity = value; }, docs, paths };
