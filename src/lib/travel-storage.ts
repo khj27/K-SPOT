@@ -12,10 +12,12 @@ let loading: Promise<void> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 let timer: ReturnType<typeof setInterval> | undefined;
 let mutationGeneration = 0;
+let nextAutomaticRead = 0;
 const uid = () => typeof document === "undefined" ? "guest" : document.documentElement.dataset.userScope ?? "guest";
 export const isTravelSignedIn = () => uid() !== "guest";
 const notify = () => listeners.forEach((listener) => listener());
 function reset(next: string) {
+  nextAutomaticRead = 0;
   owner = next; revision = -1; backup = null;
   spotsSnapshot = tripsSnapshot = viewsSnapshot = toursSnapshot = "[]";
 }
@@ -51,14 +53,19 @@ export async function refreshTravel(): Promise<void> {
   })();
   return loading;
 }
-function onFocus() { void refreshTravel(); }
-function onVisibility() { if (document.visibilityState === "visible") void refreshTravel(); }
+function automaticRefresh() {
+  if (Date.now() < nextAutomaticRead) return;
+  nextAutomaticRead = Date.now() + 60_000;
+  void refreshTravel().finally(() => { if (state === "error") nextAutomaticRead = Date.now() + 300_000; });
+}
+function onFocus() { automaticRefresh(); }
+function onVisibility() { if (document.visibilityState === "visible") automaticRefresh(); }
 export function subscribeToTravel(onChange: () => void) {
   listeners.add(onChange);
   if (listeners.size === 1) {
-    void refreshTravel();
+    automaticRefresh();
     window.addEventListener("focus", onFocus); document.addEventListener("visibilitychange", onVisibility);
-    timer = setInterval(() => { if (document.visibilityState === "visible") void refreshTravel(); }, 30_000);
+    timer = setInterval(() => { if (document.visibilityState === "visible") automaticRefresh(); }, 60_000);
   }
   return () => {
     listeners.delete(onChange);

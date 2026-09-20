@@ -3,6 +3,16 @@ export type Locale = "ko" | "en";
 // Stored content, filter values and account data remain in their original language.
 // This catalogue translates presentation only, without sending user data to a service.
 const entries = `
+저장 자료를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.|Unable to load your saved data. Please try again shortly.
+저장 자료를 확인하고 있습니다.|Checking your saved data.
+찜과 최근 본 장소는 자동 저장됩니다. 일정은 편집 후 일정 저장을 눌러 주세요. 같은 계정으로 다른 기기에서도 확인할 수 있습니다.|Saved places and recent views update automatically. After editing a trip, select Save itinerary. Access your data on other devices with the same account.
+일정을 편집한 뒤 일정 저장을 누르면 계정에 반영됩니다. 같은 계정으로 다른 기기에서도 확인할 수 있습니다.|Select Save itinerary after editing to save your changes to your account. Access your trips on other devices with the same account.
+선택한 지역과 콘텐츠 취향을 반영한 추천|Recommendations based on your region and content preferences
+좌표가 있는 일정 장소를 순서대로 표시합니다. 직접 입력 장소는 아래 일정에서 확인하세요.|Trip places with known locations are shown in order. Find custom places in the itinerary below.
+지도에 표시할 위치 정보가 없습니다. 직접 입력한 장소는 일정에 저장됩니다.|No map locations are available. Custom places are still saved in your itinerary.
+페이지를 불러오지 못했습니다.|Unable to load this page.
+잠시 후 다시 시도해 주세요. 저장된 자료는 삭제되지 않습니다.|Please try again shortly. Your saved data has not been deleted.
+다시 시도|Try again
 숙소|Stays
 식사|Dining
 놀거리|Things to do

@@ -9,6 +9,8 @@ import type { ContentType, DemoMapPosition, ExploreContent } from "@/types/conte
 import { PLACE_CATEGORIES, type PlaceCategory } from "@/lib/place-categories";
 
 const COLLECTION = "contentSpots";
+let publicCache: { items: ExploreContent[]; expires: number } | undefined;
+let publicLoad: Promise<ExploreContent[]> | undefined;
 
 export async function listAdminContentSpots(): Promise<AdminContentSpot[]> {
   const snapshot = await getFirebaseAdminDb().collection(COLLECTION).limit(250).get();
@@ -26,6 +28,7 @@ export async function createAdminContentSpot(input: AdminContentSpotInput, actor
     if ((await transaction.get(ref)).exists) throw new Error("DUPLICATE_SLUG");
     transaction.create(ref, { ...input, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), createdBy: actor, updatedBy: actor });
   });
+  publicCache = undefined;
   return input.slug;
 }
 
@@ -34,16 +37,18 @@ export async function updateAdminContentSpot(id: string, input: AdminContentSpot
   const ref = getFirebaseAdminDb().collection(COLLECTION).doc(id);
   if (!(await ref.get()).exists) throw new Error("NOT_FOUND");
   await ref.set({ ...input, updatedAt: FieldValue.serverTimestamp(), updatedBy: actor }, { merge: true });
+  publicCache = undefined;
 }
 
 export async function getPublicExploreContents(): Promise<ExploreContent[]> {
   if (!isFirebaseAdminConfigured()) return [];
-  try {
-    const managed = (await listAdminContentSpots()).filter((item) => item.status === "published" && item.latitude !== null && item.longitude !== null).map(toExploreContent);
+  if (publicCache && publicCache.expires > Date.now()) return publicCache.items;
+  if (!publicLoad) publicLoad = listAdminContentSpots().then(items => {
+    const managed = items.filter(item => item.status === "published" && item.latitude !== null && item.longitude !== null).map(toExploreContent);
+    publicCache = { items: managed, expires: Date.now() + 60_000 };
     return managed;
-  } catch {
-    return [];
-  }
+  }).finally(() => { publicLoad = undefined; });
+  return publicLoad;
 }
 
 function serializeAdminContent(id: string, data: Record<string, unknown>): AdminContentSpot {

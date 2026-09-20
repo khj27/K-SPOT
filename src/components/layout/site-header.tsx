@@ -6,10 +6,10 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="shell header-inner">
-        <Link className="brand" href="/" aria-label="로컬리 홈">
+        <Link className="brand" href="/" aria-label="K-SPOT 홈">
           <span className="brand-mark" aria-hidden="true">K</span>
           <span>
-            <strong>로컬리</strong>
+            <strong>K-SPOT</strong>
             <small>K-CONTENT LOCAL TRIP</small>
           </span>
         </Link>

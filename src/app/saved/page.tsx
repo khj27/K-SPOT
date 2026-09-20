@@ -1,3 +1,4 @@
+import { TravelDataBoundary } from "@/components/account/travel-snapshot-provider";
 
 import { LocaleText } from "@/components/common/locale-provider";
 import Link from "next/link";
@@ -19,9 +20,9 @@ export default async function SavedPage({ searchParams }: { searchParams: Promis
         </div>
         <div className="saved-heading-icon" aria-hidden="true">♥</div>
       </section>
-      <Link className="ui-button" href="/planner"><LocaleText>새 일정 만들기</LocaleText></Link><SavedItinerariesList contents={contents} createdId={created} />
+      <Link className="ui-button" href="/planner"><LocaleText>새 일정 만들기</LocaleText></Link><TravelDataBoundary><SavedItinerariesList contents={contents} createdId={created} /></TravelDataBoundary>
 
-      <p className="saved-data-notice"><LocaleText>{"로그인 계정의 Firebase 자료입니다. 찜·일정 변경은 바로 저장되고 다른 기기에서도 같은 계정으로 확인할 수 있습니다."}</LocaleText></p>
+      <p className="saved-data-notice"><LocaleText>{"일정을 편집한 뒤 일정 저장을 누르면 계정에 반영됩니다. 같은 계정으로 다른 기기에서도 확인할 수 있습니다."}</LocaleText></p>
     </main>
   );
 }

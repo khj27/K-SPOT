@@ -23,7 +23,7 @@ export function SpotActions({ spotId, youtubeUrl }: { spotId: string; youtubeUrl
   useEffect(() => { if (isTravelSignedIn()) void recordViewedSpot(spotId).catch(() => { /* The global sync status displays failure. */ }); }, [spotId]);
   async function toggleSaved() {
     setBusy(true);
-    try { await setSpotSaved(spotId, !saved); setMessage(saved ? "Firebase에서 찜을 해제했습니다." : "Firebase에 장소를 저장했습니다."); }
+    try { await setSpotSaved(spotId, !saved); setMessage(saved ? "찜한 장소에서 삭제되었습니다." : "찜한 장소에 추가되었습니다."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "저장에 실패했습니다."); }
     finally { setBusy(false); }
   }

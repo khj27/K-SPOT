@@ -18,8 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const english = (await cookies()).get("kspot-locale")?.value === "en";
   return {
   title: {
-    default: english ? "K-SPOT | K-content Travel in Korea" : "로컬리 | K-콘텐츠 로컬 여행",
-    template: english ? "%s | K-SPOT" : "%s | 로컬리",
+    default: english ? "K-SPOT | K-content Travel in Korea" : "K-SPOT | K-콘텐츠 로컬 여행",
+    template: english ? "%s | K-SPOT" : "%s | K-SPOT",
   },
   description: english ? "Discover Korean filming locations and plan your own K-content trip." : "K-콘텐츠와 함께 발견하는 비수도권 로컬 여행 플래너",
   };

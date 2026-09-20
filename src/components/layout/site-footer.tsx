@@ -5,7 +5,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="shell footer-inner">
         <div>
-          <strong>로컬리</strong>
+          <strong>K-SPOT</strong>
           <p>K-콘텐츠를 따라 발견하는 새로운 로컬 여행</p>
         </div>
         <div className="footer-links">
