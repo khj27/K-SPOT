@@ -37,7 +37,7 @@ export default async function PlannerResultPage({ searchParams }: PlannerResultP
       </section>
       <section className="planner-route-summary"><AppIcon name="route" size={22} /><div><strong>{rankedPlaces.length}<LocaleText>{"개의 촬영지 후보"}</LocaleText></strong><span><LocaleText>{"지역 35 · 취향 30 · 비수도권 20점 기준"}</LocaleText></span></div><Link href="/mypage#saved-places"><LocaleText>{"저장한 장소 보기 "}</LocaleText><AppIcon name="arrow" size={15} /></Link></section>
       <PlannerItineraryEditor initialTitle={params.title} initialPeopleCount={peopleCount} key={JSON.stringify(params)} candidates={rankedPlaces} startDate={params.startDate} endDate={params.endDate} recommendations={itinerary} days={days} region={params.region ?? "전국"} transport={params.transport ?? "대중교통"} companion={params.companion ?? "친구"} types={Array.from(selectedTypes)} />
-      <p className="planner-demo-note"><LocaleText>{"등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 여행 인원는 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다."}</LocaleText></p>
+      <p className="planner-demo-note"><LocaleText>{"등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 여행 인원은 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다."}</LocaleText></p>
     </main>
   );
 }

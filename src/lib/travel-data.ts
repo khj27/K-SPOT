@@ -1,3 +1,4 @@
+import { parseManualStops, type ManualStop } from "@/lib/manual-stops";
 import { tripDays } from "@/lib/trip-dates";
 export type VisitTime = { startTime: string; endTime: string };
 export type SavedTourPlace = { contentId: string; title: string; address: string; latitude: number; longitude: number; contentTypeId: string; imageUrl?: string };
@@ -42,7 +43,7 @@ export type SavedItinerary = {
   id: string; savedAt: string; days: number; region: string;
   transport: string; companion: string; types: string[]; placeIds: string[]; tourStops?: SavedTourStop[];
   startDate?: string; endDate?: string; placeDays?: number[];
-  title?: string; peopleCount?: number; placeTimes?: VisitTime[];
+  title?: string; peopleCount?: number; placeTimes?: VisitTime[]; manualStops?: ManualStop[];
 };
 
 export function parseSavedSpotIds(value: string): string[] {
@@ -86,10 +87,11 @@ export function parseTravelBackup(text: string): TravelBackup {
   if (tourPlaces && new Set(tourPlaces.map((item) => item.contentId)).size !== tourPlaces.length) throw new Error("중복 관광지가 있습니다.");
   if (trips.length !== value.itineraries.length || new Set(trips.map((item) => item.id)).size !== trips.length || trips.some((item) => ![item.id, item.region, item.transport, item.companion].every(string) || !Number.isFinite(Date.parse(item.savedAt)) || item.placeIds.length > 100 || !item.placeIds.every(string) || item.types.length > 20 || !item.types.every(string))) throw new Error("저장 일정에 잘못된 값 또는 중복 ID가 있습니다.");
   // Export only travel fields, never arbitrary browser or account data.
-  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, ...(tourPlaces ? { tourPlaces } : {}), itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops, startDate, endDate, placeDays, title, peopleCount, placeTimes }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(title !== undefined ? { title: title.trim() || "나의 여행 일정" } : {}), ...(peopleCount !== undefined ? { peopleCount } : {}), ...(placeTimes ? { placeTimes: placeTimes.map(({ startTime, endTime }) => ({ startTime, endTime })) } : {}), ...(startDate && endDate ? { startDate, endDate } : {}), ...(placeDays ? { placeDays } : {}), ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
+  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, ...(tourPlaces ? { tourPlaces } : {}), itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops, startDate, endDate, placeDays, title, peopleCount, placeTimes, manualStops }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(manualStops === undefined ? {} : { manualStops: parseManualStops(manualStops, days) }), ...(title !== undefined ? { title: title.trim() || "나의 여행 일정" } : {}), ...(peopleCount !== undefined ? { peopleCount } : {}), ...(placeTimes ? { placeTimes: placeTimes.map(({ startTime, endTime }) => ({ startTime, endTime })) } : {}), ...(startDate && endDate ? { startDate, endDate } : {}), ...(placeDays ? { placeDays } : {}), ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
 }
 
 function validSchedule(item: SavedItinerary): boolean {
+  try { parseManualStops(item.manualStops, item.days); } catch { return false; }
   if (item.title !== undefined && (typeof item.title !== "string" || item.title.length > 120)) return false;
   if (item.peopleCount !== undefined && (!Number.isInteger(item.peopleCount) || item.peopleCount < 1 || item.peopleCount > 100)) return false;
   if (item.placeTimes !== undefined && (!Array.isArray(item.placeTimes) || item.placeTimes.length !== item.placeIds.length || !item.placeTimes.every(validVisitTime))) return false;

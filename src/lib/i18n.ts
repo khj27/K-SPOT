@@ -3,6 +3,15 @@ export type Locale = "ko" | "en";
 // Stored content, filter values and account data remain in their original language.
 // This catalogue translates presentation only, without sending user data to a service.
 const entries = `
+직접 입력한 장소|Custom places
+장소 이름|Place name
+새 장소 이름|New place name
+주소 또는 메모|Address or note
+직접 입력 장소 추가|Add custom place
+직접 입력한 장소는 일정에 저장되며 지도에는 표시되지 않습니다.|Custom places are saved in your trip but are not shown on the map.
+직접 입력 장소의 이름·날짜·시간을 확인해 주세요.|Check the name, day and times of your custom places.
+앞으로 이동|Move earlier
+뒤로 이동|Move later
 여행 일정 관리|Manage trips
 여행 제목|Trip title
 여행 인원|Travelers
@@ -241,7 +250,7 @@ K-SPOT 장소|K-SPOT place
 개의 촬영지 후보| possible filming locations
 지역 35 · 취향 30 · 비수도권 20점 기준|Scoring: region 35 · interests 30 · outside the capital 20
 저장한 장소 보기|View saved places
-등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 여행 인원는 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다.|Recommendations use published locations. Days without enough places are left open. Transport and companions are saved with your trip; travel times and opening hours are not yet factored in.
+등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 여행 인원은 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다.|Recommendations use published locations. Days without enough places are left open. Transport and companions are saved with your trip; travel times and opening hours are not yet factored in.
 일 · 촬영지| days · Filming locations: 
 곳 · 주변 관광지| · Nearby attractions: 
 처리 중…|Processing…

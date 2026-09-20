@@ -14,18 +14,21 @@ import { VisitTimeFields } from "@/components/planner/visit-time-fields";
 import { ItineraryMap } from "@/components/planner/itinerary-map";
 import type { MapPlace } from "@/types/map";
 import { dayDate, distributeDays } from "@/lib/trip-dates";
+import { ManualStopsEditor } from "@/components/planner/manual-stops-editor";
+import { parseManualStops, type ManualStop } from "@/lib/manual-stops";
 import { ItineraryTourStops } from "@/components/planner/itinerary-tour-stops";
 
 type Props = {
   recommendations: RankedPlace[]; candidates?: RankedPlace[]; days: number; region: string;
   transport: string; companion: string; types: string[]; savedId?: string;
   startDate?: string; endDate?: string; initialPlaceDays?: number[]; initialTourStops?: SavedTourStop[];
-  initialTitle?: string; initialPeopleCount?: number; initialTimes?: VisitTime[];
+  initialManualStops?: ManualStop[]; initialTitle?: string; initialPeopleCount?: number; initialTimes?: VisitTime[];
 };
 type Stop = RankedPlace & { day: number; time: VisitTime };
-export function PlannerItineraryEditor({ recommendations, candidates = recommendations, days, region, transport, companion, types, savedId, startDate, endDate, initialPlaceDays, initialTourStops = [], initialTitle = "", initialPeopleCount = 1, initialTimes }: Props) {
+export function PlannerItineraryEditor({ recommendations, candidates = recommendations, days, region, transport, companion, types, savedId, startDate, endDate, initialPlaceDays, initialTourStops = [], initialTitle = "", initialPeopleCount = 1, initialTimes, initialManualStops = [] }: Props) {
   const { t } = useTranslation();
   const router = useRouter();
+  const [manualStops, setManualStops] = useState(initialManualStops);
   const [title, setTitle] = useState(initialTitle);
   const [people, setPeople] = useState(String(initialPeopleCount));
   const [itinerary, setItinerary] = useState<Stop[]>(() => recommendations.map((item, index) => ({ ...item, day: initialPlaceDays?.[index] ?? distributeDays(recommendations.length, days)[index], time: initialTimes?.[index] ?? { startTime: "", endTime: "" } })));
@@ -42,12 +45,13 @@ export function PlannerItineraryEditor({ recommendations, candidates = recommend
     if (!forceSave) { setItinerary(next); setTourStops(validStops); setSaved(false); setMessage("변경한 일정을 저장해 주세요."); return; }
     const peopleCount = Number(people);
     if (!/^\d+$/.test(people) || !Number.isInteger(peopleCount) || peopleCount < 1 || peopleCount > 100) { setMessage("여행 인원은 1~100명으로 입력해 주세요."); return; }
-    if (!next.length) { setMessage("일정에 장소를 추가해 주세요."); return; }
+    try { parseManualStops(manualStops, days); } catch { setMessage("직접 입력 장소의 이름·날짜·시간을 확인해 주세요."); return; }
+    if (!next.length && !manualStops.length) { setMessage("일정에 장소를 추가해 주세요."); return; }
     if (next.some((stop) => !validVisitTime(stop.time)) || validStops.some((stop) => !validVisitTime({ startTime: stop.startTime ?? "", endTime: stop.endTime ?? "" }))) { setMessage("시작·종료 시간을 모두 입력하고 종료 시간을 더 늦게 설정해 주세요."); return; }
     setBusy(true); setMessage("");
     itineraryId.current ??= `itinerary-${crypto.randomUUID()}`;
     try {
-      await storeItinerary({ id: itineraryId.current, title: title.trim() || "나의 여행 일정", peopleCount, savedAt: new Date().toISOString(), days, region, transport, companion, types, placeIds: next.map(({ place }) => place.id), placeDays: next.map(({ day }) => day), placeTimes: next.map(({ time }) => time), tourStops: validStops, ...(startDate && endDate ? { startDate, endDate } : {}) }, persisted.current);
+      await storeItinerary({ id: itineraryId.current, title: title.trim() || "나의 여행 일정", manualStops, peopleCount, savedAt: new Date().toISOString(), days, region, transport, companion, types, placeIds: next.map(({ place }) => place.id), placeDays: next.map(({ day }) => day), placeTimes: next.map(({ time }) => time), tourStops: validStops, ...(startDate && endDate ? { startDate, endDate } : {}) }, persisted.current);
       persisted.current = true; setSaved(true); setItinerary(next); setTourStops(validStops); setMessage("여행 일정이 저장되었습니다.");
       if (!savedId) router.push(`/saved?created=${encodeURIComponent(itineraryId.current)}`);
     } catch (error) { setMessage(error instanceof Error && /로그인|삭제/.test(error.message) ? error.message : "여행 일정 저장에 실패했습니다. 다시 시도해주세요."); }
@@ -69,14 +73,14 @@ export function PlannerItineraryEditor({ recommendations, candidates = recommend
   return <>
     <div className="trip-metadata"><label>{t("여행 제목")}<input maxLength={120} value={title} placeholder={t("나의 여행 일정")} disabled={busy} onChange={(e) => { setTitle(e.target.value); setSaved(false); setMessage("변경한 일정을 저장해 주세요."); }} /></label><label>{t("여행 인원")}<input type="number" min="1" max="100" step="1" value={people} disabled={busy} onChange={(e) => { setPeople(e.target.value); setSaved(false); setMessage("변경한 일정을 저장해 주세요."); }} /></label><p>{startDate && endDate ? `${startDate} ~ ${endDate}` : `${days} ${t("일")}`}</p></div>
     <ItineraryMap places={mapPlaces} />
-    <div className="planner-edit-toolbar"><span>{days}<LocaleText>{"일 · 촬영지 "}</LocaleText>{itinerary.length}<LocaleText>{"곳 · 주변 관광지 "}</LocaleText>{tourStops.length}<LocaleText>{"곳"}</LocaleText></span><button className={`planner-save-button ${saved ? "is-saved" : ""}`} type="button" aria-pressed={saved} disabled={busy || saved} onClick={() => void toggleSaved()}><LocaleText>{busy ? "처리 중…" : saved ? "저장됨" : "일정 저장"}</LocaleText></button></div>
+    <div className="planner-edit-toolbar"><span>{days}<LocaleText>{"일 · 촬영지 "}</LocaleText>{itinerary.length}<LocaleText>{"곳 · 주변 관광지 "}</LocaleText>{tourStops.length}<LocaleText>{"곳"}</LocaleText> · {t("직접 입력한 장소")} {manualStops.length}</span><button className={`planner-save-button ${saved ? "is-saved" : ""}`} type="button" aria-pressed={saved} disabled={busy || saved} onClick={() => void toggleSaved()}><LocaleText>{busy ? "처리 중…" : saved ? "저장됨" : "일정 저장"}</LocaleText></button></div>
     <p role="status"><LocaleText>{message || (saved ? "여행 일정이 저장되었습니다." : "날짜별 장소를 조정하고 로그인 후 저장하세요.")}</LocaleText></p>
     <nav className="trip-day-nav" aria-label={t("일정 날짜")}>{Array.from({ length: days }, (_, day) => <a key={day} href={`#trip-day-${day + 1}`}>DAY {day + 1}{startDate ? ` · ${dayDate(startDate, day).slice(5)}` : ""}</a>)}</nav>
     <div className="trip-days">{Array.from({ length: days }, (_, day) => {
       const stops = itinerary.filter((stop) => stop.day === day);
       return <section className="trip-day-section" id={`trip-day-${day + 1}`} key={day}>
         <header><div><p className="kspot-eyebrow">DAY {day + 1}</p><h2><LocaleText>{startDate ? dayDate(startDate, day) : `${day + 1}일차`}</LocaleText></h2></div><span><LocaleText>{"촬영지 "}</LocaleText>{stops.length}<LocaleText>{"곳"}</LocaleText></span></header>
-        {!stops.length && <div className="trip-free-day"><h3><LocaleText>{"자유 일정"}</LocaleText></h3><p><LocaleText>{"이 날짜에는 아직 담은 장소가 없습니다. 아래 후보에서 추가하거나 다른 날짜의 장소를 옮겨 주세요."}</LocaleText></p></div>}
+        {!stops.length && !manualStops.some(item => item.day === day) && <div className="trip-free-day"><h3><LocaleText>{"자유 일정"}</LocaleText></h3><p><LocaleText>{"이 날짜에는 아직 담은 장소가 없습니다. 아래 후보에서 추가하거나 다른 날짜의 장소를 옮겨 주세요."}</LocaleText></p></div>}
         {stops.map((stop, order) => {
           const { place, reasons } = stop;
           const index = itinerary.indexOf(stop);
@@ -88,6 +92,7 @@ export function PlannerItineraryEditor({ recommendations, candidates = recommend
             <ItineraryTourStops place={place} stops={tourStops} busy={busy} onChange={(next) => update(itinerary, next)} />
           </article>;
         })}
+        <ManualStopsEditor day={day} days={days} stops={manualStops} busy={busy} onChange={next => { setManualStops(next); setSaved(false); setMessage("변경한 일정을 저장해 주세요."); }} />
         <label className="trip-add-place"><LocaleText>{"촬영지 추가"}</LocaleText><select aria-label={t(`DAY ${day + 1} 촬영지 추가`)} value="" disabled={busy || !remaining.length || itinerary.length >= 100} onChange={(event) => { const item = remaining.find(({ place }) => place.id === event.target.value); if (item) void update([...itinerary, { ...item, day, time: { startTime: "", endTime: "" } }]); }}><option value=""><LocaleText>{remaining.length ? "추가할 장소를 선택하세요" : "추가할 촬영지 후보가 없습니다"}</LocaleText></option>{remaining.map(({ place }) => <option key={place.id} value={place.id}>{place.spotName} · {place.title}</option>)}</select></label>
       </section>;
     })}</div>

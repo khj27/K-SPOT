@@ -177,3 +177,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
   .admin-list-filter{padding:16px}.admin-list-filter label{width:100%}.admin-list-filter .kspot-primary-button,.admin-list-filter .ui-button{flex:1}
   .admin-import-steps{grid-template-columns:1fr;gap:6px}.admin-import-steps li{padding:12px 16px}.admin-csv-import{padding:18px}.admin-research{padding:18px}
 }
+
+/* Keep the icon beside the input despite the generic grid label rule. */
+.explore-filter-panel label.explore-query{display:flex;flex-direction:row;align-items:center;gap:8px;min-width:0}.explore-query>svg{flex-shrink:0}.explore-query>input{flex:1;min-width:0;width:0}
+.manual-stops-editor{margin:20px 0}.manual-stops-editor h3{font-size:16px}.manual-place-form{padding:16px;border:1px dashed #cfc5e6;border-radius:12px;background:#fcfaff}.manual-place-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.manual-place-fields label{display:grid;gap:6px;font-size:13px}.manual-place-fields input{width:100%;min-width:0;border:1px solid #ded8e9;border-radius:8px;padding:10px;min-height:44px}.manual-place-form p{font-size:12px;color:#756984;margin:10px 0 0}@media(max-width:640px){.manual-place-fields{grid-template-columns:1fr}}
