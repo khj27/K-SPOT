@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { MapExplorer } from "@/components/map/map-explorer";
 import { AppIcon } from "@/components/common/app-icon";
 import { CategoryCard } from "@/components/home/category-card";
 import { ContentThumbnail } from "@/components/common/content-thumbnail";
@@ -10,7 +11,7 @@ export default async function HomePage() {
   const contents = await getPublicExploreContents();
   return (
     <main className="home-dashboard">
-      <section className="planner-heading"><p className="kspot-eyebrow">K-CONTENT LOCAL TRIP</p><h1>장면 속 그곳에서<br /><em>나의 여행을 시작하세요.</em></h1><p>등록된 콘텐츠를 둘러보고, 지도에서 촬영지를 찾아보세요.</p><Link className="kspot-primary-button" href="/map">지도에서 촬영지 찾기</Link></section><section><h2>등록된 콘텐츠 {contents.length}곳</h2><div className="explore-result-grid">{contents.slice(0, 6).map((content) => <article className="explore-content-card" key={content.id}><Link href={`/spots/${content.id}`}><div className={`explore-card-visual visual-${content.visual}`}><ContentThumbnail src={content.imageUrl} title={content.title} /></div><div className="explore-card-body"><p>{content.region} · {content.type}</p><h2>{content.title}</h2><span>{content.spotName}</span></div></Link></article>)}</div>{!contents.length && <p>공개된 콘텐츠를 준비하고 있습니다.</p>}</section>
+      {contents.length > 0 && <section aria-label="등록 콘텐츠 지도"><MapExplorer appKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? ""} contents={contents} /></section>}<section><h2>등록된 콘텐츠 {contents.length}곳</h2><div className="explore-result-grid">{contents.slice(0, 6).map((content) => <article className="explore-content-card" key={content.id}><Link href={`/spots/${content.id}`}><div className={`explore-card-visual visual-${content.visual}`}><ContentThumbnail src={content.imageUrl} title={content.title} /></div><div className="explore-card-body"><p>{content.region} · {content.type}</p><h2>{content.title}</h2><span>{content.spotName}</span></div></Link></article>)}</div>{!contents.length && <p>공개된 콘텐츠를 준비하고 있습니다.</p>}</section>
 
       <section className="home-categories">
         <div className="home-section-heading"><div><h2>어떤 콘텐츠를 좋아하시나요?</h2><p>좋아하는 유형에서 전국의 K-콘텐츠 장소를 찾아보세요.</p></div><Link href="/explore">전체 보기 <AppIcon name="arrow" size={16} /></Link></div>
