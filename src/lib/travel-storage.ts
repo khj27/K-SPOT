@@ -96,6 +96,7 @@ export const storeItinerary = (itinerary: SavedItinerary, existing = false) => m
 export const removeSavedItinerary = (id: string) => mutate({ type: "remove-itinerary", id });
 export const recordViewedSpot = (id: string) => mutate({ type: "view", id });
 export const clearRecentViews = () => mutate({ type: "clear-views" });
+export const removeRecentViews = (ids: string[]) => mutate({ type: "remove-views", ids });
 export async function restoreTravelBackup(incoming: TravelBackup) { await mutate({ type: "import", backup: parseTravelBackup(JSON.stringify(incoming)) }); }
 export function createTravelBackup() {
   if (owner !== uid() || !backup || state === "error") throw new Error("Firebase 자료를 먼저 불러와 주세요.");

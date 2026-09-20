@@ -134,5 +134,5 @@ function hasValidCoordinates(place: MapPlace) {
 function createMarkerImage(maps: KakaoMaps, color: string, selected: boolean) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46"><path fill="${color}" stroke="white" stroke-width="3" d="M19 1.5c-9.7 0-17.5 7.8-17.5 17.5C1.5 32.2 19 44.5 19 44.5S36.5 32.2 36.5 19C36.5 9.3 28.7 1.5 19 1.5Z"/><circle cx="19" cy="18" r="6" fill="white"/></svg>`;
   const source = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-  return new maps.MarkerImage(source, new maps.Size(selected ? 46 : 38, selected ? 56 : 46), { offset: new maps.Point(selected ? 23 : 19, selected ? 54 : 44) });
+  return new maps.MarkerImage(source, new maps.Size(selected ? 38 : 22, selected ? 46 : 27), { offset: new maps.Point(selected ? 19 : 11, selected ? 44 : 26) });
 }

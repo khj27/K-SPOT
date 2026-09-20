@@ -40,6 +40,12 @@ export function applyTravelMutation(current: TravelDocument, value: unknown): Tr
       break;
     }
     case "clear-views": recentViews = []; break;
+    case "remove-views": {
+      if (!Array.isArray(action.ids) || action.ids.length < 1 || action.ids.length > 50) throw new Error("INVALID_IDS");
+      const removed = new Set(action.ids.map(id));
+      recentViews = recentViews.filter((view) => !removed.has(view.spotId));
+      break;
+    }
     case "import": {
       const incoming = parseTravelBackup(JSON.stringify(action.backup));
       const ids = new Set(backup.itineraries.map((item) => item.id));

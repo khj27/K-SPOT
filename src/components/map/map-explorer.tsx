@@ -11,9 +11,9 @@ import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import type { MapPlace } from "@/types/map";
 
 export function MapExplorer({ contents, appKey }: { contents: ExploreContent[]; appKey: string }) {
-  const [selectedId, setSelectedId] = useState(contents[0]?.id);
+  const [selectedId, setSelectedId] = useState<string>();
   const [mapStatus, setMapStatus] = useState<"loading" | "ready" | "missing-key" | "error">("loading");
-  const selected = contents.find((content) => content.id === selectedId) ?? contents[0];
+  const selected = contents.find((content) => content.id === selectedId);
   const mapPlaces = useMemo<MapPlace[]>(() => contents.map((content) => ({ id: content.id, source: "kspot", title: content.spotName, address: content.address ?? `${content.region} · ${content.spotName}`, latitude: content.coordinates.latitude, longitude: content.coordinates.longitude, contentTypeLabel: content.type, description: content.description, kspotContent: content })), [contents]);
   const handleMapStatus = useCallback((status: "loading" | "ready" | "missing-key" | "error") => setMapStatus(status), []);
 
@@ -32,7 +32,7 @@ export function MapExplorer({ contents, appKey }: { contents: ExploreContent[]; 
       <aside className="map-explorer-sidebar">
         <div className="map-explorer-sidebar-heading"><div><p className="kspot-eyebrow">PLACE LIST</p><h2>촬영지 {contents.length}곳</h2></div><AppIcon name="map" size={22} /></div>
         {selected && <div className="map-selected-place"><span className={`map-selected-thumb visual-${selected.visual}`}><ContentThumbnail src={selected.imageUrl} title={selected.title} /></span><div><p>{selected.region} · {selected.type}</p><h3>{selected.spotName}</h3><span>{selected.title}</span><Link href={`/spots/${selected.id}`}>상세 보기 <AppIcon name="arrow" size={14} /></Link></div></div>}
-        <div className="map-place-list">{contents.map((content) => <button className={content.id === selected?.id ? "is-active" : undefined} key={content.id} onClick={() => setSelectedId(content.id)} type="button"><span className={`map-list-dot visual-${content.visual}`}>{content.title.slice(0, 1)}</span><span><strong>{content.spotName}</strong><small>{content.region} · {content.type}</small></span><AppIcon name="arrow" size={15} /></button>)}</div>
+        <div className="map-place-list">{contents.map((content) => <button className={content.id === selected?.id ? "is-active" : undefined} aria-pressed={content.id === selected?.id} key={content.id} onClick={() => setSelectedId(content.id)} type="button"><span className={`map-list-thumb visual-${content.visual}`}><ContentThumbnail src={content.imageUrl} title={content.title} /></span><span><strong>{content.spotName}</strong><small>{content.region} · {content.type}</small></span><AppIcon name="arrow" size={15} /></button>)}</div>
       </aside>
     </div></div>
   );

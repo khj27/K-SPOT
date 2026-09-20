@@ -103,6 +103,27 @@ test('history is deduplicated capped at 50 and can be cleared', () => {
   assert.equal(current.recentViews[0].spotId, 'spot-30');
   assert.equal(mutations.applyTravelMutation(current, { type: 'clear-views' }).recentViews.length, 0);
 });
+test('selected history removal persists and preserves other history bookmarks and trips', async () => {
+  const app = setup();
+  await app.api.setSpotSaved('a', true);
+  await app.api.storeItinerary(trip);
+  for (const id of ['a', 'b', 'c']) await app.api.recordViewedSpot(id);
+  await app.api.removeRecentViews(['b']);
+  const fresh = app.fresh(); await fresh.refreshTravel();
+  assert.deepEqual(JSON.parse(fresh.getRecentViewsSnapshot()).map(v => v.spotId), ['c', 'a']);
+  assert.equal(fresh.getSavedSpotsSnapshot(), '["a"]');
+  assert.equal(JSON.parse(fresh.getItinerariesSnapshot())[0].id, trip.id);
+  await fresh.removeRecentViews(['b']);
+  assert.equal(JSON.parse(fresh.getRecentViewsSnapshot()).length, 2);
+  app.fail();
+  await assert.rejects(fresh.removeRecentViews(['a']), /unavailable/);
+  assert.equal(JSON.parse(fresh.getRecentViewsSnapshot()).length, 2);
+});
+test('selected history removal rejects malformed or oversized selections', () => {
+  for (const ids of [[], 'a', ['../bad'], [null], Array(51).fill('a')]) {
+    assert.throws(() => mutations.applyTravelMutation(empty(), { type: 'remove-views', ids }));
+  }
+});
 test('migration preserves existing server edits and invalid inputs are rejected', () => {
   const current = mutations.applyTravelMutation(empty(), { type: 'itinerary', itinerary: trip });
   const incoming = { ...mutations.emptyTravel(), itineraries: [{ ...trip, region: '부산' }], spots: ['new'] };
