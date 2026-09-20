@@ -7,6 +7,7 @@ import { NearbyTourism } from "@/components/spots/nearby-tourism";
 import { SpotLocationMap } from "@/components/map/spot-location-map";
 import { SpotActions } from "@/components/spots/spot-actions";
 import { getPublicExploreContents } from "@/lib/content-repository";
+import { youtubeThumbnail } from "@/lib/content-thumbnail";
 
 type SpotPageProps = { params: Promise<{ id: string }> };
 
@@ -28,7 +29,7 @@ export default async function SpotPage({ params }: SpotPageProps) {
           <h1>{content.spotName}</h1>
           <p className="spot-location"><AppIcon name="pin" size={16} /> {content.region} · K-콘텐츠 촬영 장소</p>
           <p className="spot-description">{content.description} 작품 속 장면을 떠올리며 주변의 로컬 매력도 함께 경험해 보세요.</p>
-          <SpotActions spotId={content.id} />
+          <SpotActions spotId={content.id} youtubeUrl={content.sourceUrl && youtubeThumbnail(content.sourceUrl) ? content.sourceUrl : undefined} />
         </div>
       </section>
 

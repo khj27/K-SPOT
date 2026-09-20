@@ -1,4 +1,7 @@
 /* Shared controls: consistent touch targets, spacing, and keyboard focus. */
+.spot-action-youtube{white-space:nowrap;flex-shrink:0;text-decoration:none}
+.spot-action-youtube:hover{background:#fff4f3;border-color:#f0c4bf}
+.spot-action-youtube svg{flex-shrink:0}
 .recent-selection-bar{display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px}
 .recent-selection-bar label{display:flex;align-items:center;gap:8px;cursor:pointer}
 .recent-selection-bar>span{color:#746e82}.recent-selection-bar button{margin-left:auto}
