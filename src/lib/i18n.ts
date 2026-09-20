@@ -241,7 +241,7 @@ K-SPOT 장소|K-SPOT place
 개의 촬영지 후보| possible filming locations
 지역 35 · 취향 30 · 비수도권 20점 기준|Scoring: region 35 · interests 30 · outside the capital 20
 저장한 장소 보기|View saved places
-등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 동행자 정보는 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다.|Recommendations use published locations. Days without enough places are left open. Transport and companions are saved with your trip; travel times and opening hours are not yet factored in.
+등록된 공개 콘텐츠를 이용한 추천입니다. 후보가 부족한 날은 자유 일정으로 표시합니다. 이동 수단과 여행 인원는 일정에 기록되며, 이동 시간과 영업시간은 아직 추천에 반영되지 않습니다.|Recommendations use published locations. Days without enough places are left open. Transport and companions are saved with your trip; travel times and opening hours are not yet factored in.
 일 · 촬영지| days · Filming locations: 
 곳 · 주변 관광지| · Nearby attractions: 
 처리 중…|Processing…
