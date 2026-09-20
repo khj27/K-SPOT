@@ -90,7 +90,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .travel-stats a{padding:24px;transition:border-color .15s}
 .travel-stats a:hover{border-color:#b9adf3}
 .travel-stats span{font-size:14px;color:#746e82}
-.travel-sync-status{background:#f8f6ff;color:#655883;padding:9px 24px}
+.travel-sync-status{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:100;max-width:min(420px,calc(100vw - 32px));box-sizing:border-box;background:#f8f6ff;color:#655883;padding:12px 16px;border:1px solid #ddd6ef;border-radius:12px;box-shadow:0 4px 20px #24163b1a;overflow-wrap:anywhere}
 
 /* Saved itinerary editing */
 .saved-itinerary-card{grid-template-columns:minmax(190px,1fr) minmax(150px,1fr) auto auto;padding:22px;gap:16px}
