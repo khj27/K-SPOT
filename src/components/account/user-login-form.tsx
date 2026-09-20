@@ -25,14 +25,20 @@ export function UserLoginForm({ configured }: { configured: boolean }) {
       created = mode === "signup";
       if (created) await updateProfile(credential.user, { displayName: String(form.get("name")).trim() });
       const response = await fetch("/api/account/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idToken: await credential.user.getIdToken(true) }) });
-      if (!response.ok) throw new Error("SESSION_FAILED");
+      if (!response.ok) throw Object.assign(new Error("SESSION_FAILED"), { code: "session/failed" });
       await signOut(auth);
       // A full navigation resets the document's per-account local-storage scope.
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign("/mypage");
     } catch (error) {
       const code = (error as { code?: string }).code;
-      setMessage(created ? "계정은 생성되었으나 로그인 연결에 실패했습니다. 로그인 탭에서 다시 시도해 주세요." : code === "auth/too-many-requests" ? "요청이 많습니다. 잠시 후 다시 시도해 주세요." : code === "auth/weak-password" ? "더 긴 비밀번호를 사용해 주세요." : code === "auth/email-already-in-use" ? "가입할 수 없는 이메일입니다. 기존 계정이라면 로그인 또는 비밀번호 재설정을 이용해 주세요." : "처리하지 못했습니다. 이메일·비밀번호와 네트워크를 확인해 주세요.");
+      const details: Record<string, string> = {
+        "auth/network-request-failed": "인증 서버에 연결하지 못했습니다. 네트워크 또는 브라우저의 연결 차단 설정을 확인해 주세요.",
+        "auth/invalid-credential": "이메일 또는 비밀번호가 일치하지 않습니다.",
+        "auth/unauthorized-domain": "현재 사이트의 Firebase 인증 도메인 설정이 필요합니다.",
+        "session/failed": "계정 인증은 성공했으나 로그인 연결에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+      };
+      setMessage(created ? "계정은 생성되었으나 로그인 연결에 실패했습니다. 로그인 탭에서 다시 시도해 주세요." : details[code ?? ""] ?? (code === "auth/too-many-requests" ? "요청이 많습니다. 잠시 후 다시 시도해 주세요." : code === "auth/weak-password" ? "더 긴 비밀번호를 사용해 주세요." : code === "auth/email-already-in-use" ? "가입할 수 없는 이메일입니다. 기존 계정이라면 로그인 또는 비밀번호 재설정을 이용해 주세요." : `처리하지 못했습니다. 다시 시도해 주세요.${code && /^(auth|app)\/[a-z-]+$/.test(code) ? ` (${code})` : ""}`));
       try { await signOut(getFirebaseUserAuth()); } catch { /* Keep the original user-facing error. */ }
     } finally { setBusy(false); }
   }
