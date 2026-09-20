@@ -3,6 +3,12 @@ export type Locale = "ko" | "en";
 // Stored content, filter values and account data remain in their original language.
 // This catalogue translates presentation only, without sending user data to a service.
 const entries = `
+숙소|Stays
+식사|Dining
+놀거리|Things to do
+주변 장소 분류|Nearby place categories
+조회된 주변 장소를 분류별로 볼 수 있습니다. 놀거리는 관광지·문화시설·행사·레포츠를 포함합니다.|Filter the nearby results by category. Things to do includes sights, cultural venues, events and activities.
+조회된 장소 중 선택한 분류에 해당하는 곳이 없습니다. 다른 분류를 선택해 주세요.|No places in these results match this category. Try another category.
 직접 입력한 장소|Custom places
 장소 이름|Place name
 새 장소 이름|New place name

@@ -10,6 +10,7 @@ import { useState } from "react";
 import type { ExploreContent } from "@/types/content";
 import type { NearbyTourismResponse, TourApiPlace } from "@/types/tour-api";
 import type { SavedTourStop } from "@/lib/travel-data";
+import { TRIP_NEARBY_CATEGORIES, tripNearbyCategory, type TripNearbyCategory } from "@/lib/place-categories";
 
 export function ItineraryTourStops({ place, stops, busy, onChange }: {
   place: ExploreContent;
@@ -23,6 +24,8 @@ export function ItineraryTourStops({ place, stops, busy, onChange }: {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [searched, setSearched] = useState(false);
+  const [category, setCategory] = useState<TripNearbyCategory>("전체");
+  const visibleItems = items.filter(item => category === "전체" || tripNearbyCategory(item.contentTypeId) === category);
   const selected = stops.filter((stop) => stop.anchorId === place.id);
   function move(contentId: string, direction: number) {
     const index = selected.findIndex((stop) => stop.contentId === contentId);
@@ -61,8 +64,11 @@ export function ItineraryTourStops({ place, stops, busy, onChange }: {
       <button type="button" disabled={busy} onClick={() => void onChange(stops.filter((item) => item.contentId !== stop.contentId))} aria-label={t(`${stop.title} 일정에서 제외`)}><LocaleText>{"제외"}</LocaleText></button>
     </li>)}</ol>}
     <button type="button" className="tour-search-button" disabled={loading || busy} onClick={() => void search()}><LocaleText>{loading ? "주변 관광지 조회 중…" : searched ? "주변 관광지 다시 조회" : "주변 5km 관광지 찾아 담기"}</LocaleText></button>
+    <div className="map-category-filter trip-nearby-filter" role="group" aria-label={t("주변 장소 분류")}>{TRIP_NEARBY_CATEGORIES.map(value => <button key={value} type="button" aria-pressed={category === value} onClick={() => setCategory(value)}>{t(value)}{searched && <span> ({value === "전체" ? items.length : items.filter(item => tripNearbyCategory(item.contentTypeId) === value).length})</span>}</button>)}</div>
+    <p className="trip-nearby-help"><LocaleText>조회된 주변 장소를 분류별로 볼 수 있습니다. 놀거리는 관광지·문화시설·행사·레포츠를 포함합니다.</LocaleText></p>
     <p role="status"><LocaleText>{message}</LocaleText></p>
-    {items.length > 0 && <ul className="tour-stop-list tour-stop-candidates">{items.map((item) => {
+    {searched && !loading && !message && !visibleItems.length && <p role="status"><LocaleText>조회된 장소 중 선택한 분류에 해당하는 곳이 없습니다. 다른 분류를 선택해 주세요.</LocaleText></p>}
+    {visibleItems.length > 0 && <ul className="tour-stop-list tour-stop-candidates">{visibleItems.map((item) => {
       const added = stops.some((stop) => stop.contentId === item.contentId);
       return <li key={item.contentId}><div className="tourism-photo"><ContentThumbnail src={item.thumbnailUrl || item.imageUrl} title={item.title} /></div><div><strong>{item.title}</strong><span><LocaleText>{item.address || "주소 정보 없음"}</LocaleText></span>{item.distanceMeters !== undefined && <small><LocaleText>{"촬영지 기준 약 "}</LocaleText>{(item.distanceMeters / 1000).toFixed(1)}<LocaleText>{"km · 이동 경로 거리와 다를 수 있음"}</LocaleText></small>}</div><button type="button" disabled={busy || added || stops.length >= 10} onClick={() => void onChange([...stops, { contentId: item.contentId, anchorId: place.id, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api" }])} aria-label={t(`${item.title} 일정에 추가`)}><LocaleText>{added ? "담김" : "일정에 추가"}</LocaleText></button></li>;
     })}</ul>}
