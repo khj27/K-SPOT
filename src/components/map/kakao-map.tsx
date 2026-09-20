@@ -1,4 +1,6 @@
 "use client";
+import { useTranslation } from "@/components/common/locale-provider";
+
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 
@@ -24,6 +26,8 @@ type KakaoMapProps = {
 
 
 export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function KakaoMap({ appKey, initialCenter, places, selectedId, fitPlaces = false, onReadyStateChange, onSelect }, ref) {
+  const { t } = useTranslation();
+
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<KakaoMapInstance | null>(null);
   const mapsRef = useRef<KakaoMaps | null>(null);
@@ -124,7 +128,7 @@ export const KakaoMap = forwardRef<KakaoMapHandle, KakaoMapProps>(function Kakao
     };
   }, [onSelect, places, ready, selectedId, fitPlaces]);
 
-  return <div className="kakao-map-surface" ref={containerRef} aria-label="Kakao 지도" />;
+  return <div className="kakao-map-surface" ref={containerRef} aria-label={t("Kakao 지도")} />;
 });
 
 function hasValidCoordinates(place: MapPlace) {

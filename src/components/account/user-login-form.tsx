@@ -1,9 +1,15 @@
 "use client";
+import { useTranslation } from "@/components/common/locale-provider";
+
+import { LocaleText } from "@/components/common/locale-provider";
+
 import { useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut } from "firebase/auth";
 import { getFirebaseUserAuth } from "@/lib/firebase/client";
 
 export function UserLoginForm({ configured }: { configured: boolean }) {
+  const { t } = useTranslation();
+
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -42,11 +48,11 @@ export function UserLoginForm({ configured }: { configured: boolean }) {
       try { await signOut(getFirebaseUserAuth()); } catch { /* Keep the original user-facing error. */ }
     } finally { setBusy(false); }
   }
-  return <section className="travel-backup auth-card"><div className="auth-mode-switch" role="group" aria-label="계정 메뉴">{(["login", "signup", "reset"] as const).map((value) => <button type="button" key={value} disabled={busy} aria-pressed={mode === value} onClick={() => { setMode(value); setMessage(""); }}>{value === "login" ? "로그인" : value === "signup" ? "회원가입" : "비밀번호 재설정"}</button>)}</div><div className="auth-mode-heading"><h2>{mode === "login" ? "다시 만나서 반가워요" : mode === "signup" ? "나의 여행을 모아보세요" : "비밀번호를 잊으셨나요?"}</h2><p>{mode === "login" ? "이메일과 비밀번호로 로그인하세요." : mode === "signup" ? "간단한 가입 후 장소와 일정을 저장할 수 있어요." : "가입한 이메일로 재설정 안내를 보내드립니다."}</p></div><form key={mode} className="admin-login-form" onSubmit={submit}>
-    {mode === "signup" && <label>이름 또는 닉네임<input name="name" autoComplete="nickname" required maxLength={60} /></label>}
-    <label>이메일<input name="email" type="email" autoComplete="username" required maxLength={254} /></label>
-    {mode !== "reset" && <label>비밀번호<input name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : 6} required maxLength={128} /></label>}
-    {mode === "signup" && <><label>비밀번호 확인<input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p>저장한 장소와 일정은 같은 계정으로 다른 기기에서도 확인할 수 있습니다.</p></>}
-    <button className="kspot-primary-button" disabled={busy || !configured} type="submit">{busy ? "처리 중…" : mode === "login" ? "로그인하기" : mode === "signup" ? "계정 만들기" : "재설정 메일 보내기"}</button>
-    <p className="form-feedback" role="status">{!configured ? "Firebase 설정이 필요합니다." : message}</p></form></section>;
+  return <section className="travel-backup auth-card"><div className="auth-mode-switch" role="group" aria-label={t("계정 메뉴")}>{(["login", "signup", "reset"] as const).map((value) => <button type="button" key={value} disabled={busy} aria-pressed={mode === value} onClick={() => { setMode(value); setMessage(""); }}><LocaleText>{value === "login" ? "로그인" : value === "signup" ? "회원가입" : "비밀번호 재설정"}</LocaleText></button>)}</div><div className="auth-mode-heading"><h2><LocaleText>{mode === "login" ? "다시 만나서 반가워요" : mode === "signup" ? "나의 여행을 모아보세요" : "비밀번호를 잊으셨나요?"}</LocaleText></h2><p><LocaleText>{mode === "login" ? "이메일과 비밀번호로 로그인하세요." : mode === "signup" ? "간단한 가입 후 장소와 일정을 저장할 수 있어요." : "가입한 이메일로 재설정 안내를 보내드립니다."}</LocaleText></p></div><form key={mode} className="admin-login-form" onSubmit={submit}>
+    {mode === "signup" && <label><LocaleText>{"이름 또는 닉네임"}</LocaleText><input name="name" autoComplete="nickname" required maxLength={60} /></label>}
+    <label><LocaleText>{"이메일"}</LocaleText><input name="email" type="email" autoComplete="username" required maxLength={254} /></label>
+    {mode !== "reset" && <label><LocaleText>{"비밀번호"}</LocaleText><input name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={mode === "signup" ? 8 : 6} required maxLength={128} /></label>}
+    {mode === "signup" && <><label><LocaleText>{"비밀번호 확인"}</LocaleText><input name="confirm" type="password" autoComplete="new-password" minLength={8} required maxLength={128} /></label><p><LocaleText>{"저장한 장소와 일정은 같은 계정으로 다른 기기에서도 확인할 수 있습니다."}</LocaleText></p></>}
+    <button className="kspot-primary-button" disabled={busy || !configured} type="submit"><LocaleText>{busy ? "처리 중…" : mode === "login" ? "로그인하기" : mode === "signup" ? "계정 만들기" : "재설정 메일 보내기"}</LocaleText></button>
+    <p className="form-feedback" role="status"><LocaleText>{!configured ? "Firebase 설정이 필요합니다." : message}</LocaleText></p></form></section>;
 }

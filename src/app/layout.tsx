@@ -2,26 +2,34 @@ import type { Metadata } from "next";
 
 import { AppChrome } from "@/components/layout/app-chrome";
 import { getUserIdentity } from "@/lib/firebase/user-session";
+import { cookies } from "next/headers";
+import { LocaleProvider, LocaleText } from "@/components/common/locale-provider";
 
 import "./globals.css";
 import "./kspot.css";
 import "./ui-polish.css";
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const english = (await cookies()).get("kspot-locale")?.value === "en";
+  return {
   title: {
-    default: "로컬리 | K-콘텐츠 로컬 여행",
-    template: "%s | 로컬리",
+    default: english ? "K-SPOT | K-content Travel in Korea" : "로컬리 | K-콘텐츠 로컬 여행",
+    template: english ? "%s | K-SPOT" : "%s | 로컬리",
   },
-  description: "K-콘텐츠와 함께 발견하는 비수도권 로컬 여행 플래너",
-};
+  description: english ? "Discover Korean filming locations and plan your own K-content trip." : "K-콘텐츠와 함께 발견하는 비수도권 로컬 여행 플래너",
+  };
+}
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getUserIdentity();
+  const locale = (await cookies()).get("kspot-locale")?.value === "en" ? "en" : "ko";
   return (
-    <html lang="ko" data-scroll-behavior="smooth" data-user-scope={user?.uid ?? "guest"}>
+    <html lang={locale} data-scroll-behavior="smooth" data-user-scope={user?.uid ?? "guest"}>
       <body>
-        <a className="skip-link" href="#main-content">본문 바로가기</a>
+        <LocaleProvider locale={locale}>
+        <a className="skip-link" href="#main-content"><LocaleText>본문 바로가기</LocaleText></a>
         <AppChrome><div id="main-content">{children}</div></AppChrome>
+        </LocaleProvider>
       </body>
     </html>
   );
