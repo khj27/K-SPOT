@@ -24,10 +24,10 @@ export function PublicSidebar() {
       </nav>
 
       <aside className="sidebar-promo" aria-label="추천 콘텐츠">
-        <small>오늘의 K-콘텐츠 추천</small>
-        <strong>눈물의 여왕</strong>
-        <span>촬영지 따라가기</span>
-        <Link href="/explore?content=queen-of-tears">코스 보기 <AppIcon name="arrow" size={14} /></Link>
+        <small>나만의 K-콘텐츠 여행</small>
+        <strong>장면 속으로</strong>
+        <span>등록된 촬영지 둘러보기</span>
+        <Link href="/explore">콘텐츠 보기 <AppIcon name="arrow" size={14} /></Link>
         <div className="promo-portrait promo-portrait-one" />
         <div className="promo-portrait promo-portrait-two" />
       </aside>

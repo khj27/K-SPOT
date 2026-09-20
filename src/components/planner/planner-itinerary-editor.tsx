@@ -1,101 +1,77 @@
 "use client";
-
 import Link from "next/link";
 import { useRef, useState } from "react";
-
-import { AppIcon } from "@/components/common/app-icon";
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import type { RankedPlace } from "@/lib/recommendation";
-
-import { storeItinerary } from "@/lib/travel-storage";
+import { storeItinerary, removeSavedItinerary } from "@/lib/travel-storage";
 import type { SavedTourStop } from "@/lib/travel-data";
+import { dayDate, distributeDays } from "@/lib/trip-dates";
 import { ItineraryTourStops } from "@/components/planner/itinerary-tour-stops";
 
-type PlannerItineraryEditorProps = {
-  recommendations: RankedPlace[];
-  days: number;
-  region: string;
-  transport: string;
-  companion: string;
-  types: string[];
-  savedId?: string;
-  initialTourStops?: SavedTourStop[];
+type Props = {
+  recommendations: RankedPlace[]; candidates?: RankedPlace[]; days: number; region: string;
+  transport: string; companion: string; types: string[]; savedId?: string;
+  startDate?: string; endDate?: string; initialPlaceDays?: number[]; initialTourStops?: SavedTourStop[];
 };
-
-export function PlannerItineraryEditor({ recommendations, days, region, transport, companion, types, savedId, initialTourStops = [] }: PlannerItineraryEditorProps) {
-  const [itinerary, setItinerary] = useState(() => recommendations.slice(0, days));
+type Stop = RankedPlace & { day: number };
+export function PlannerItineraryEditor({ recommendations, candidates = recommendations, days, region, transport, companion, types, savedId, startDate, endDate, initialPlaceDays, initialTourStops = [] }: Props) {
+  const [itinerary, setItinerary] = useState<Stop[]>(() => recommendations.map((item, index) => ({ ...item, day: initialPlaceDays?.[index] ?? distributeDays(recommendations.length, days)[index] })));
   const [tourStops, setTourStops] = useState(initialTourStops);
   const [saved, setSaved] = useState(Boolean(savedId));
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const itineraryId = useRef(savedId);
   const persisted = useRef(Boolean(savedId));
 
-  async function removePlace(id: string) {
-    await saveItinerary(itinerary.filter(({ place }) => place.id !== id));
-  }
-
-  async function movePlace(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= itinerary.length) return;
-    const next = [...itinerary];
-    [next[index], next[target]] = [next[target], next[index]];
-    await saveItinerary(next);
-  }
-
-  async function saveItinerary(next = itinerary, nextStops = tourStops) {
+  async function update(next: Stop[], nextStops = tourStops, forceSave = false) {
     if (busy) return;
-    setBusy(true); setError("");
+    const validStops = nextStops.filter((stop) => next.some(({ place }) => place.id === stop.anchorId));
+    if (!persisted.current && !forceSave) { setItinerary(next); setTourStops(validStops); setMessage("변경한 일정을 저장해 주세요."); return; }
+    setBusy(true); setMessage("");
     itineraryId.current ??= `itinerary-${crypto.randomUUID()}`;
-    const value = {
-      id: itineraryId.current,
-      savedAt: new Date().toISOString(),
-      days,
-      region,
-      transport,
-      companion,
-      types,
-      placeIds: next.map(({ place }) => place.id),
-      tourStops: nextStops.filter((stop) => next.some(({ place }) => place.id === stop.anchorId)),
-    };
     try {
-      await storeItinerary(value, persisted.current);
-      persisted.current = true;
-      setItinerary(next);
-      setTourStops(value.tourStops);
-      setSaved(true); setError("");
-    } catch (error) { setError(error instanceof Error ? error.message : "일정 저장에 실패했습니다."); }
+      await storeItinerary({ id: itineraryId.current, savedAt: new Date().toISOString(), days, region, transport, companion, types, placeIds: next.map(({ place }) => place.id), placeDays: next.map(({ day }) => day), tourStops: validStops, ...(startDate && endDate ? { startDate, endDate } : {}) }, persisted.current);
+      persisted.current = true; setSaved(true); setItinerary(next); setTourStops(validStops); setMessage("Firebase에 일정을 저장했습니다.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "저장하지 못했습니다. 다시 시도해 주세요."); }
     finally { setBusy(false); }
   }
-
-  if (itinerary.length === 0) {
-    return (
-      <div className="planner-no-result">
-        <h2>일정에 남은 장소가 없습니다.</h2>
-        <p>장소를 다시 추천받거나 조건을 바꿔보세요.</p>
-        <Link className="button button-secondary" href="/planner">조건 변경하기</Link>
-      </div>
-    );
+  async function toggleSaved() {
+    if (busy) return;
+    if (!saved) return update(itinerary, tourStops, true);
+    setBusy(true);
+    try { await removeSavedItinerary(itineraryId.current!); persisted.current = false; setSaved(false); setMessage("일정 저장을 취소했습니다. 다시 눌러 저장할 수 있습니다."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "저장 취소에 실패했습니다."); }
+    finally { setBusy(false); }
   }
-
-  return (
-    <>
-      <div className="planner-edit-toolbar">
-        <span>촬영지 {itinerary.length}곳 · 관광지 {tourStops.length}곳 · 순서를 조정하거나 제외할 수 있어요.</span>
-        <button className={saved ? "planner-save-button is-saved" : "planner-save-button"} onClick={() => void saveItinerary()} disabled={saved || busy} type="button"><AppIcon name="bookmark" size={16} /> {busy ? "Firebase 저장 중…" : saved ? "일정 저장됨" : "Firebase에 일정 저장"}</button>
-      </div>
-      <p role="status">{error || (saved ? "Firebase에 일정을 저장했습니다." : "로그인 후 저장할 수 있으며 순서 변경·삭제도 바로 Firebase에 반영됩니다.")}</p>
-      {itinerary.length < days && <p>선택한 {days}일 중 {itinerary.length}일에만 장소가 있습니다. 나머지 날짜는 자유 일정입니다.</p>}
-      <div className="planner-itinerary">
-        {itinerary.map(({ place, score, reasons }, index) => (
-          <article className="planner-day-card" key={place.id}>
-            <div className="planner-day-label"><strong>DAY {index + 1}</strong><span>{index === 0 ? "여행 시작" : index === itinerary.length - 1 ? "여행 마무리" : "로컬 탐방"}</span></div>
-            <div className="planner-stop"><div className={`planner-stop-visual visual-${place.visual}`}>{place.title.slice(0, 1)}</div><div className="planner-stop-content"><p><AppIcon name="pin" size={14} /> {place.region} · {place.type}</p><h2>{place.spotName}</h2><span>{place.title} · {place.episode}</span><div className="recommendation-reasons" aria-label={`추천 점수 ${score}점`}>{reasons.map((reason) => <small key={reason}>{reason}</small>)}</div><Link href={`/spots/${place.id}`}>장소 상세 <AppIcon name="arrow" size={14} /></Link></div></div>
-            <div className="planner-time-note"><span>예시 체류</span><strong>{index % 2 === 0 ? "2시간" : "1시간 30분"}</strong><span>실제 이동시간과 영업시간은 반영하지 않은 예시입니다.</span></div>
-            <ItineraryTourStops place={place} stops={tourStops} busy={busy} onChange={(next) => saveItinerary(itinerary, next)} />
-            <div className="planner-day-actions"><button onClick={() => void movePlace(index, -1)} disabled={busy || index === 0} type="button" aria-label="앞으로 이동">↑</button><button onClick={() => void movePlace(index, 1)} disabled={busy || index === itinerary.length - 1} type="button" aria-label="뒤로 이동">↓</button><button onClick={() => void removePlace(place.id)} disabled={busy} type="button" aria-label={`${place.spotName} 일정에서 삭제`}>삭제</button></div>
-          </article>
-        ))}
-      </div>
-    </>
-  );
+  function move(index: number, direction: number) {
+    const indices = itinerary.map((stop, i) => stop.day === itinerary[index].day ? i : -1).filter((i) => i >= 0);
+    const target = indices[indices.indexOf(index) + direction];
+    if (target === undefined) return;
+    const next = [...itinerary]; [next[index], next[target]] = [next[target], next[index]];
+    void update(next);
+  }
+  const remaining = candidates.filter(({ place }) => !itinerary.some((stop) => stop.place.id === place.id));
+  return <>
+    <div className="planner-edit-toolbar"><span>{days}일 · 촬영지 {itinerary.length}곳 · 주변 관광지 {tourStops.length}곳</span><button className={`planner-save-button ${saved ? "is-saved" : ""}`} type="button" aria-pressed={saved} disabled={busy} onClick={() => void toggleSaved()}>{busy ? "처리 중…" : saved ? "일정 저장됨 · 저장 취소" : "일정 저장"}</button></div>
+    <p role="status">{message || (saved ? "수정 내용은 Firebase에 자동 저장됩니다." : "날짜별 장소를 조정하고 로그인 후 저장하세요.")}</p>
+    <nav className="trip-day-nav" aria-label="일정 날짜">{Array.from({ length: days }, (_, day) => <a key={day} href={`#trip-day-${day + 1}`}>DAY {day + 1}{startDate ? ` · ${dayDate(startDate, day).slice(5)}` : ""}</a>)}</nav>
+    <div className="trip-days">{Array.from({ length: days }, (_, day) => {
+      const stops = itinerary.filter((stop) => stop.day === day);
+      return <section className="trip-day-section" id={`trip-day-${day + 1}`} key={day}>
+        <header><div><p className="kspot-eyebrow">DAY {day + 1}</p><h2>{startDate ? dayDate(startDate, day) : `${day + 1}일차`}</h2></div><span>촬영지 {stops.length}곳</span></header>
+        {!stops.length && <div className="trip-free-day"><h3>자유 일정</h3><p>이 날짜에는 아직 담은 장소가 없습니다. 아래 후보에서 추가하거나 다른 날짜의 장소를 옮겨 주세요.</p></div>}
+        {stops.map((stop, order) => {
+          const { place, reasons } = stop;
+          const index = itinerary.indexOf(stop);
+          return <article className="trip-stop-card" key={place.id}>
+            <div className="planner-stop"><span className="trip-stop-number">{order + 1}</span><div className={`planner-stop-visual visual-${place.visual}`}><ContentThumbnail src={place.imageUrl} title={place.title} /></div><div className="planner-stop-content"><p>{place.region} · {place.type}</p><h3>{place.spotName}</h3><span>{place.title}</span><Link href={`/spots/${place.id}`}>장소·지도 보기</Link></div></div>
+            <div className="recommendation-reasons">{reasons.map((reason) => <small key={reason}>{reason}</small>)}</div>
+            <div className="trip-stop-actions"><label>방문 날짜<select aria-label={`${place.spotName} 방문 날짜`} disabled={busy} value={day} onChange={(event) => void update(itinerary.map((item, i) => i === index ? { ...item, day: Number(event.target.value) } : item))}>{Array.from({ length: days }, (_, d) => <option key={d} value={d}>DAY {d + 1}{startDate ? ` · ${dayDate(startDate, d)}` : ""}</option>)}</select></label><button disabled={busy || order === 0} onClick={() => move(index, -1)} aria-label={`${place.spotName} 앞으로 이동`}>↑</button><button disabled={busy || order === stops.length - 1} onClick={() => move(index, 1)} aria-label={`${place.spotName} 뒤로 이동`}>↓</button><button disabled={busy} onClick={() => void update(itinerary.filter((item) => item !== stop))}>일정에서 제외</button></div>
+            <ItineraryTourStops place={place} stops={tourStops} busy={busy} onChange={(next) => update(itinerary, next)} />
+          </article>;
+        })}
+        <label className="trip-add-place">촬영지 추가<select aria-label={`DAY ${day + 1} 촬영지 추가`} value="" disabled={busy || !remaining.length || itinerary.length >= 100} onChange={(event) => { const item = remaining.find(({ place }) => place.id === event.target.value); if (item) void update([...itinerary, { ...item, day }]); }}><option value="">{remaining.length ? "추가할 장소를 선택하세요" : "추가할 촬영지 후보가 없습니다"}</option>{remaining.map(({ place }) => <option key={place.id} value={place.id}>{place.spotName} · {place.title}</option>)}</select></label>
+      </section>;
+    })}</div>
+  </>;
 }

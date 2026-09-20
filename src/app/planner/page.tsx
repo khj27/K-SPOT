@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { TripDateFields } from "@/components/planner/trip-date-fields";
 import { AppIcon } from "@/components/common/app-icon";
 import { getPublicExploreContents } from "@/lib/content-repository";
-import { exploreRegions, exploreTypes } from "@/mocks/explore-data";
+import { exploreTypes } from "@/mocks/explore-data";
+import { normalizeRegion } from "@/lib/recommendation";
 
 type PlannerPageProps = {
   searchParams: Promise<{ spot?: string }>;
@@ -11,7 +13,7 @@ type PlannerPageProps = {
 export default async function PlannerPage({ searchParams }: PlannerPageProps) {
   const { spot } = await searchParams;
   const exploreContents = await getPublicExploreContents();
-  const regions = [...new Set([...exploreRegions.filter((region) => region !== "전체 지역"), ...exploreContents.map((content) => content.region)])];
+  const regions = [...new Set(["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주", ...exploreContents.map((content) => normalizeRegion(content.region))])];
   const selectedSpot = exploreContents.find((content) => content.id === spot);
 
   return (
@@ -26,8 +28,8 @@ export default async function PlannerPage({ searchParams }: PlannerPageProps) {
         <fieldset>
           <legend>여행 기본 정보</legend>
           <div className="planner-field-grid">
-            <label><span>여행 기간</span><select name="days" defaultValue="2"><option value="1">당일치기</option><option value="2">1박 2일</option><option value="3">2박 3일</option></select></label>
-            <label><span>출발 지역</span><select name="region" defaultValue={selectedSpot?.region ?? "부산"}>{regions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
+            <TripDateFields today={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date())} />
+            <label><span>여행 지역</span><select name="region" defaultValue={selectedSpot ? normalizeRegion(selectedSpot.region) : "부산"}>{regions.map((region) => <option key={region} value={region}>{region}</option>)}</select></label>
             <label><span>이동 수단</span><select name="transport" defaultValue="대중교통"><option>대중교통</option><option>자가용</option><option>도보 중심</option></select></label>
             <label><span>동행자</span><select name="companion" defaultValue="친구"><option>혼자</option><option>친구</option><option>연인</option><option>가족</option></select></label>
           </div>
@@ -35,10 +37,10 @@ export default async function PlannerPage({ searchParams }: PlannerPageProps) {
         <fieldset>
           <legend>콘텐츠 취향</legend>
           <div className="planner-choice-grid">
-            {exploreTypes.filter((type) => type !== "전체").map((type, index) => <label className="planner-choice" key={type}><input type="checkbox" name="types" value={type} defaultChecked={selectedSpot ? type === selectedSpot.type : index < 2} /><span>{type}</span></label>)}
+            {exploreTypes.filter((type) => type !== "전체").map((type) => <label className="planner-choice" key={type}><input type="checkbox" name="types" value={type} defaultChecked={selectedSpot ? type === selectedSpot.type : true} /><span>{type}</span></label>)}
           </div>
         </fieldset>
-        <div className="planner-form-footer"><p><AppIcon name="sparkles" size={17} /> 공개된 등록 콘텐츠와 데모 장소에서 조건에 맞는 코스를 구성합니다.</p><button className="kspot-primary-button" type="submit">추천 코스 만들기 <AppIcon name="arrow" size={17} /></button></div>
+        <div className="planner-form-footer"><p><AppIcon name="sparkles" size={17} /> 등록된 콘텐츠로 날짜별 코스를 구성합니다. 최대 31일까지 선택할 수 있어요.</p><button className="kspot-primary-button" type="submit">추천 코스 만들기 <AppIcon name="arrow" size={17} /></button></div>
       </form>
       <Link className="planner-back-link" href="/explore">콘텐츠 먼저 둘러보기 <AppIcon name="arrow" size={15} /></Link>
     </main>

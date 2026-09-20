@@ -5,6 +5,7 @@ export type KakaoMapInstance = {
   getLevel(): number;
   setLevel(level: number): void;
   setCenter(position: KakaoLatLng): void;
+  setBounds(bounds: { extend(position: KakaoLatLng): void }): void;
   relayout(): void;
 };
 
@@ -17,6 +18,7 @@ export type KakaoMarkerInstance = {
 export type KakaoMaps = {
   load(callback: () => void): void;
   LatLng: new (latitude: number, longitude: number) => KakaoLatLng;
+  LatLngBounds: new () => { extend(position: KakaoLatLng): void };
   Map: new (container: HTMLElement, options: { center: KakaoLatLng; level: number }) => KakaoMapInstance;
   Marker: new (options: { map: KakaoMapInstance; position: KakaoLatLng; title?: string; clickable?: boolean; image?: unknown }) => KakaoMarkerInstance;
   MarkerImage: new (source: string, size: unknown, options?: { offset?: unknown }) => unknown;

@@ -1,5 +1,6 @@
 "use client";
 
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import { useState } from "react";
 import type { ExploreContent } from "@/types/content";
 import type { NearbyTourismResponse, TourApiPlace } from "@/types/tour-api";
@@ -42,7 +43,7 @@ export function ItineraryTourStops({ place, stops, busy, onChange }: {
     <p role="status">{message}</p>
     {items.length > 0 && <ul className="tour-stop-list tour-stop-candidates">{items.map((item) => {
       const added = stops.some((stop) => stop.contentId === item.contentId);
-      return <li key={item.contentId}><div><strong>{item.title}</strong><span>{item.address || "주소 정보 없음"}</span>{item.distanceMeters !== undefined && <small>촬영지 기준 약 {(item.distanceMeters / 1000).toFixed(1)}km · 이동 경로 거리와 다를 수 있음</small>}</div><button type="button" disabled={busy || added || stops.length >= 10} onClick={() => void onChange([...stops, { contentId: item.contentId, anchorId: place.id, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api" }])} aria-label={`${item.title} 일정에 추가`}>{added ? "담김" : "일정에 추가"}</button></li>;
+      return <li key={item.contentId}><div className="tourism-photo"><ContentThumbnail src={item.thumbnailUrl || item.imageUrl} title={item.title} /></div><div><strong>{item.title}</strong><span>{item.address || "주소 정보 없음"}</span>{item.distanceMeters !== undefined && <small>촬영지 기준 약 {(item.distanceMeters / 1000).toFixed(1)}km · 이동 경로 거리와 다를 수 있음</small>}</div><button type="button" disabled={busy || added || stops.length >= 10} onClick={() => void onChange([...stops, { contentId: item.contentId, anchorId: place.id, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api" }])} aria-label={`${item.title} 일정에 추가`}>{added ? "담김" : "일정에 추가"}</button></li>;
     })}</ul>}
     {(items.length > 0 || selected.length > 0) && <p>관광지는 일정당 최대 10곳까지 담을 수 있습니다. 촬영지를 삭제하면 연결된 관광지도 일정에서 제외됩니다. 영업시간과 실제 이동 동선은 방문 전에 확인해 주세요.</p>}
   </section>;

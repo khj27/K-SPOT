@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import { AppIcon } from "@/components/common/app-icon";
 import type { NearbyTourismResponse } from "@/types/tour-api";
 
@@ -37,9 +38,9 @@ export function NearbyTourism({ latitude, longitude }: NearbyTourismProps) {
       </div>
       {loading ? <p className="nearby-tourism-state">한국관광공사 주변 관광정보를 불러오는 중입니다…</p> : data && data.items.length > 0 ? (
         <div className="nearby-tourism-list">
-          {data.items.map((place) => <article key={place.contentId}><div className="nearby-tourism-icon"><AppIcon name="pin" size={17} /></div><div><h3>{place.title}</h3><p>{place.address || "주소 정보 확인 중"}</p><span>{place.distanceMeters === undefined ? "주변 관광지" : `${place.distanceMeters.toLocaleString("ko-KR")}m 거리`}</span></div></article>)}
+          {data.items.map((place) => <article key={place.contentId}><div className="tourism-photo"><ContentThumbnail src={place.thumbnailUrl || place.imageUrl} title={place.title} /></div><div><h3><a href={`https://map.kakao.com/link/map/${encodeURIComponent(place.title)},${place.latitude},${place.longitude}`} target="_blank" rel="noreferrer">{place.title}</a></h3><p>{place.address || "주소 정보 확인 중"}</p><span>{place.distanceMeters === undefined ? "주변 관광지" : `${place.distanceMeters.toLocaleString("ko-KR")}m 거리`}</span></div></article>)}
         </div>
-      ) : <div className="nearby-tourism-empty"><AppIcon name="map" size={24} /><div><strong>TourAPI 연결을 준비하고 있습니다.</strong><p>{data?.message}</p></div></div>}
+      ) : <div className="nearby-tourism-empty"><AppIcon name="map" size={24} /><div><strong>주변 즐길거리를 찾지 못했습니다.</strong><p>{data?.message}</p></div></div>}
       <p className="tourapi-evidence">한국관광공사 국문 관광정보 서비스 · locationBasedList2 · 반경 5km</p>
     </section>
   );

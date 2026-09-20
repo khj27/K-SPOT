@@ -3,7 +3,6 @@ import "server-only";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 import { getFirebaseAdminDb, isFirebaseAdminConfigured } from "@/lib/firebase/admin";
-import { exploreContents } from "@/mocks/explore-data";
 import { contentThumbnail } from "@/lib/content-thumbnail";
 import type { AdminContentSpot, AdminContentSpotInput } from "@/types/admin-content";
 import type { ContentType, DemoMapPosition, ExploreContent } from "@/types/content";
@@ -37,14 +36,12 @@ export async function updateAdminContentSpot(id: string, input: AdminContentSpot
 }
 
 export async function getPublicExploreContents(): Promise<ExploreContent[]> {
-  if (!isFirebaseAdminConfigured()) return exploreContents;
+  if (!isFirebaseAdminConfigured()) return [];
   try {
     const managed = (await listAdminContentSpots()).filter((item) => item.status === "published" && item.latitude !== null && item.longitude !== null).map(toExploreContent);
-    const merged = new Map(exploreContents.map((item) => [item.id, item]));
-    managed.forEach((item) => merged.set(item.id, item));
-    return Array.from(merged.values());
+    return managed;
   } catch {
-    return exploreContents;
+    return [];
   }
 }
 

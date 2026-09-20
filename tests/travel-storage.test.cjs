@@ -14,6 +14,35 @@ function load(file, globals = {}) {
 const data = load('src/lib/travel-data.ts');
 const mutations = load('src/lib/travel-mutations.ts');
 const trip = { id: 'trip-one', savedAt: '2026-09-19T00:00:00Z', days: 2, region: '서울', transport: '대중교통', companion: '친구', types: ['영화'], placeIds: ['a', 'b'] };
+test('calendar dates and per-place days survive save, cancellation and resave', () => {
+  const dated = { ...trip, days: 5, startDate: '2026-09-28', endDate: '2026-10-02', placeDays: [0, 4] };
+  let state = mutations.applyTravelMutation(empty(), { type: 'itinerary', itinerary: dated });
+  assert.equal(state.backup.itineraries[0].endDate, '2026-10-02');
+  assert.equal(state.backup.itineraries[0].placeDays[1], 4);
+  state = mutations.applyTravelMutation(state, { type: 'remove-itinerary', id: dated.id });
+  assert.equal(state.backup.itineraries.length, 0);
+  state = mutations.applyTravelMutation(state, { type: 'itinerary', itinerary: dated, existing: false });
+  assert.equal(state.backup.itineraries.length, 1);
+});
+test('invalid date ranges and day assignments cannot be persisted', () => {
+  for (const changes of [
+    { startDate: '2026-02-30', endDate: '2026-03-01' },
+    { startDate: '2026-09-22', endDate: '2026-09-20' },
+    { startDate: '2026-09-20', endDate: '2026-09-25' },
+    { startDate: '2026-09-20' }, { days: 32 },
+    { placeDays: [0] }, { placeDays: [0, 2] }, { placeDays: [-1, 0] }, { placeDays: [0, 1.5] },
+  ]) assert.throws(() => mutations.applyTravelMutation(empty(), { type: 'itinerary', itinerary: { ...trip, ...changes } }));
+});
+test('calendar handles month/year boundaries, leap dates, and sparse recommendations', () => {
+  const dates = load('src/lib/trip-dates.ts');
+  assert.equal(dates.tripDays('2026-12-31', '2027-01-02'), 3);
+  assert.equal(dates.tripDays('2028-02-28', '2028-03-01'), 3);
+  assert.equal(dates.dayDate('2026-12-31', 1), '2027-01-01');
+  assert.equal(dates.tripDays('2026-01-01', '2026-01-31'), 31);
+  assert.throws(() => dates.tripDays('2026-01-01', '2026-02-01'));
+  assert.equal(JSON.stringify(dates.distributeDays(7, 3)), '[0,0,0,1,1,2,2]');
+  assert.equal(JSON.stringify(dates.distributeDays(1, 3)), '[0]');
+});
 function empty() { return { backup: mutations.emptyTravel(), recentViews: [], revision: 0 }; }
 function setup(uid = 'alice') {
   let remote = empty(), fail = false;

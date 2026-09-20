@@ -1,3 +1,4 @@
+import { tripDays } from "@/lib/trip-dates";
 export type SavedTourStop = {
   contentId: string; anchorId: string; title: string; address: string;
   latitude: number; longitude: number; source: "tour-api";
@@ -22,6 +23,7 @@ function parseTourStops(value: unknown, placeIds: string[]): SavedTourStop[] {
 export type SavedItinerary = {
   id: string; savedAt: string; days: number; region: string;
   transport: string; companion: string; types: string[]; placeIds: string[]; tourStops?: SavedTourStop[];
+  startDate?: string; endDate?: string; placeDays?: number[];
 };
 
 export function parseSavedSpotIds(value: string): string[] {
@@ -38,11 +40,12 @@ export function parseItineraries(value: string): SavedItinerary[] {
     return parsed.filter((item): item is SavedItinerary => {
       if (!item || typeof item !== "object") return false;
       return typeof item.id === "string" && !!item.id && typeof item.savedAt === "string"
-        && Number.isInteger(item.days) && item.days >= 1 && item.days <= 3
+        && Number.isInteger(item.days) && item.days >= 1 && item.days <= 31
         && typeof item.region === "string" && typeof item.transport === "string" && typeof item.companion === "string"
         && Array.isArray(item.types) && item.types.every((type: unknown) => typeof type === "string")
         && Array.isArray(item.placeIds) && item.placeIds.every((id: unknown) => typeof id === "string" && !!id)
-        && new Set(item.placeIds).size === item.placeIds.length;
+        && new Set(item.placeIds).size === item.placeIds.length
+        && validSchedule(item);
     });
   } catch { return []; }
 }
@@ -61,5 +64,13 @@ export function parseTravelBackup(text: string): TravelBackup {
   const trips = parseItineraries(JSON.stringify(value.itineraries));
   if (trips.length !== value.itineraries.length || new Set(trips.map((item) => item.id)).size !== trips.length || trips.some((item) => ![item.id, item.region, item.transport, item.companion].every(string) || !Number.isFinite(Date.parse(item.savedAt)) || item.placeIds.length > 100 || !item.placeIds.every(string) || item.types.length > 20 || !item.types.every(string))) throw new Error("저장 일정에 잘못된 값 또는 중복 ID가 있습니다.");
   // Export only travel fields, never arbitrary browser or account data.
-  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
+  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops, startDate, endDate, placeDays }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(startDate && endDate ? { startDate, endDate } : {}), ...(placeDays ? { placeDays } : {}), ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
+}
+
+function validSchedule(item: SavedItinerary): boolean {
+  if (item.startDate !== undefined || item.endDate !== undefined) {
+    try { if (typeof item.startDate !== "string" || typeof item.endDate !== "string" || tripDays(item.startDate, item.endDate) !== item.days) return false; }
+    catch { return false; }
+  }
+  return item.placeDays === undefined || (Array.isArray(item.placeDays) && item.placeDays.length === item.placeIds.length && item.placeDays.every((day) => Number.isInteger(day) && day >= 0 && day < item.days));
 }

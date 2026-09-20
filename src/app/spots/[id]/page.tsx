@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AppIcon } from "@/components/common/app-icon";
 import { NearbyTourism } from "@/components/spots/nearby-tourism";
+import { SpotLocationMap } from "@/components/map/spot-location-map";
 import { SpotActions } from "@/components/spots/spot-actions";
 import { getPublicExploreContents } from "@/lib/content-repository";
 
@@ -57,7 +58,7 @@ export default async function SpotPage({ params }: SpotPageProps) {
             <h2>장소 정보</h2>
             <dl className="spot-info-list"><div><dt>지역</dt><dd>{content.region}</dd></div><div><dt>장소명</dt><dd>{content.spotName}</dd></div>{content.address && <div><dt>주소</dt><dd>{content.address}</dd></div>}<div><dt>콘텐츠 유형</dt><dd>{content.type}</dd></div><div><dt>방문 팁</dt><dd>운영 시간과 접근성을 방문 전 확인해 주세요.</dd></div></dl>
           </section>
-          <section className="spot-mini-map"><div className="map-grid-lines" /><AppIcon name="pin" size={32} /><strong>{content.spotName}</strong><span>지도 서비스 연결 예정</span></section>
+          <SpotLocationMap content={content} appKey={process.env.NEXT_PUBLIC_KAKAO_MAP_KEY ?? ""} />
           <Link className="spot-planner-link" href={`/planner?spot=${content.id}`}>이 장소를 포함한 코스 추천 <AppIcon name="arrow" size={17} /></Link>
         </aside>
       </div>

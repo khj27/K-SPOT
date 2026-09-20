@@ -21,7 +21,7 @@ export function normalizeRegion(region: string) {
 }
 
 export function rankPlaces({ places, region, selectedTypes, selectedSpotId }: RecommendationInput): RankedPlace[] {
-  const matchesRegion = (place: ExploreContent) => !region || normalizeRegion(place.region) === normalizeRegion(region);
+  const matchesRegion = (place: ExploreContent) => !region || region === "전국" || normalizeRegion(place.region) === normalizeRegion(region);
   return places
     .map((place) => {
       const reasons: string[] = [];
