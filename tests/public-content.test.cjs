@@ -13,6 +13,7 @@ function setup({ configured = true, fail = false } = {}) {
     { id: 'no-coordinate', status: 'published', latitude: null, longitude: null },
   ].map(({ id, ...data }) => ({ id, data: () => ({ ...data, contentType: '영화', contentTitle: '등록 작품' }) }));
   const overrides = {
+    '@/lib/place-categories': require('./load-ts.cjs')('src/lib/place-categories.ts'),
     'server-only': {}, 'firebase-admin/firestore': { Timestamp: class {}, FieldValue: {} },
     '@/lib/firebase/admin': { isFirebaseAdminConfigured: () => configured, getFirebaseAdminDb: () => ({ collection: () => ({ limit: () => ({ get: async () => { if (fail) throw new Error(); return { docs }; } }) }) }) },
     '@/lib/content-thumbnail': { contentThumbnail: () => '' },

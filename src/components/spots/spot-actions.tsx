@@ -1,22 +1,23 @@
 "use client";
+import { useTravelSnapshot } from "@/components/account/travel-snapshot-provider";
 import { useTranslation } from "@/components/common/locale-provider";
 
 import { LocaleText } from "@/components/common/locale-provider";
 
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { AppIcon } from "@/components/common/app-icon";
 
-import { subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, setSpotSaved, recordViewedSpot, isTravelSignedIn } from "@/lib/travel-storage";
+import { parseSavedSpotIds, setSpotSaved, recordViewedSpot, isTravelSignedIn } from "@/lib/travel-storage";
 
 export function SpotActions({ spotId, youtubeUrl }: { spotId: string; youtubeUrl?: string }) {
   const { t } = useTranslation();
 
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
-  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot);
+  const savedSpotsSnapshot = useTravelSnapshot("spots");
   const saved = parseSavedSpotIds(savedSpotsSnapshot).includes(spotId);
 
   useEffect(() => { if (isTravelSignedIn()) void recordViewedSpot(spotId).catch(() => { /* The global sync status displays failure. */ }); }, [spotId]);

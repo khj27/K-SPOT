@@ -1,7 +1,24 @@
 import { tripDays } from "@/lib/trip-dates";
+export type VisitTime = { startTime: string; endTime: string };
+export type SavedTourPlace = { contentId: string; title: string; address: string; latitude: number; longitude: number; contentTypeId: string; imageUrl?: string };
+export function validVisitTime(value: unknown): value is VisitTime {
+  if (!value || typeof value !== "object") return false;
+  const time = value as VisitTime;
+  return (time.startTime === "" && time.endTime === "") || (typeof time.startTime === "string" && typeof time.endTime === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time.startTime) && /^([01]\d|2[0-3]):[0-5]\d$/.test(time.endTime) && time.startTime < time.endTime);
+}
+export function parseTourPlace(value: unknown): SavedTourPlace {
+  const item = value as SavedTourPlace;
+  if (!item || typeof item !== "object" || typeof item.contentId !== "string" || !/^\d{1,20}$/.test(item.contentId)
+    || typeof item.title !== "string" || !item.title.trim() || item.title.length > 500
+    || typeof item.address !== "string" || item.address.length > 1000 || typeof item.contentTypeId !== "string" || item.contentTypeId.length > 20
+    || !Number.isFinite(item.latitude) || Math.abs(item.latitude) > 90 || !Number.isFinite(item.longitude) || Math.abs(item.longitude) > 180) throw new Error("관광지 정보가 올바르지 않습니다.");
+  if (item.imageUrl !== undefined && (typeof item.imageUrl !== "string" || item.imageUrl.length > 2000 || !/^https?:\/\//.test(item.imageUrl))) throw new Error("이미지 주소가 올바르지 않습니다.");
+  return { contentId: item.contentId, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, contentTypeId: item.contentTypeId, ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}) };
+}
 export type SavedTourStop = {
   contentId: string; anchorId: string; title: string; address: string;
   latitude: number; longitude: number; source: "tour-api";
+  startTime?: string; endTime?: string;
 };
 
 function parseTourStops(value: unknown, placeIds: string[]): SavedTourStop[] {
@@ -15,8 +32,9 @@ function parseTourStops(value: unknown, placeIds: string[]): SavedTourStop[] {
       || typeof item.address !== "string" || item.address.length > 1000
       || !Number.isFinite(item.latitude) || item.latitude < -90 || item.latitude > 90
       || !Number.isFinite(item.longitude) || item.longitude < -180 || item.longitude > 180) throw new Error("저장 관광지 정보가 올바르지 않습니다.");
+    if ((item.startTime !== undefined || item.endTime !== undefined) && !validVisitTime(item)) throw new Error("방문 시간을 확인해 주세요.");
     seen.add(item.contentId);
-    return { contentId: item.contentId, anchorId: item.anchorId, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api" };
+    return { contentId: item.contentId, anchorId: item.anchorId, title: item.title, address: item.address, latitude: item.latitude, longitude: item.longitude, source: "tour-api", ...(item.startTime !== undefined ? { startTime: item.startTime, endTime: item.endTime } : {}) };
   });
 }
 
@@ -24,6 +42,7 @@ export type SavedItinerary = {
   id: string; savedAt: string; days: number; region: string;
   transport: string; companion: string; types: string[]; placeIds: string[]; tourStops?: SavedTourStop[];
   startDate?: string; endDate?: string; placeDays?: number[];
+  title?: string; peopleCount?: number; placeTimes?: VisitTime[];
 };
 
 export function parseSavedSpotIds(value: string): string[] {
@@ -51,7 +70,7 @@ export function parseItineraries(value: string): SavedItinerary[] {
 }
 
 export const BACKUP_MAX_BYTES = 2 * 1024 * 1024;
-export type TravelBackup = { format: "kspot-travel"; version: 1; exportedAt: string; spots: string[]; itineraries: SavedItinerary[] };
+export type TravelBackup = { format: "kspot-travel"; version: 1; exportedAt: string; spots: string[]; itineraries: SavedItinerary[]; tourPlaces?: SavedTourPlace[] };
 
 export function parseTravelBackup(text: string): TravelBackup {
   if (new TextEncoder().encode(text).length > BACKUP_MAX_BYTES) throw new Error("백업 파일은 2MB 이하여야 합니다.");
@@ -62,12 +81,18 @@ export function parseTravelBackup(text: string): TravelBackup {
   if (!Array.isArray(value.spots) || value.spots.length > 1000 || !value.spots.every(string) || new Set(value.spots).size !== value.spots.length) throw new Error("저장 장소 데이터가 올바르지 않습니다. 최대 1,000개를 지원합니다.");
   if (!Array.isArray(value.itineraries) || value.itineraries.length > 1000) throw new Error("저장 일정 데이터가 올바르지 않습니다. 최대 1,000개를 지원합니다.");
   const trips = parseItineraries(JSON.stringify(value.itineraries));
+  if (value.tourPlaces !== undefined && (!Array.isArray(value.tourPlaces) || value.tourPlaces.length > 1000)) throw new Error("저장 관광지 목록이 올바르지 않습니다.");
+  const tourPlaces = value.tourPlaces?.map(parseTourPlace) as SavedTourPlace[] | undefined;
+  if (tourPlaces && new Set(tourPlaces.map((item) => item.contentId)).size !== tourPlaces.length) throw new Error("중복 관광지가 있습니다.");
   if (trips.length !== value.itineraries.length || new Set(trips.map((item) => item.id)).size !== trips.length || trips.some((item) => ![item.id, item.region, item.transport, item.companion].every(string) || !Number.isFinite(Date.parse(item.savedAt)) || item.placeIds.length > 100 || !item.placeIds.every(string) || item.types.length > 20 || !item.types.every(string))) throw new Error("저장 일정에 잘못된 값 또는 중복 ID가 있습니다.");
   // Export only travel fields, never arbitrary browser or account data.
-  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops, startDate, endDate, placeDays }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(startDate && endDate ? { startDate, endDate } : {}), ...(placeDays ? { placeDays } : {}), ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
+  return { format: "kspot-travel", version: 1, exportedAt: value.exportedAt, spots: value.spots, ...(tourPlaces ? { tourPlaces } : {}), itineraries: trips.map(({ id, savedAt, days, region, transport, companion, types, placeIds, tourStops, startDate, endDate, placeDays, title, peopleCount, placeTimes }) => ({ id, savedAt, days, region, transport, companion, types, placeIds, ...(title !== undefined ? { title: title.trim() || "나의 여행 일정" } : {}), ...(peopleCount !== undefined ? { peopleCount } : {}), ...(placeTimes ? { placeTimes: placeTimes.map(({ startTime, endTime }) => ({ startTime, endTime })) } : {}), ...(startDate && endDate ? { startDate, endDate } : {}), ...(placeDays ? { placeDays } : {}), ...(tourStops === undefined ? {} : { tourStops: parseTourStops(tourStops, placeIds) }) })) };
 }
 
 function validSchedule(item: SavedItinerary): boolean {
+  if (item.title !== undefined && (typeof item.title !== "string" || item.title.length > 120)) return false;
+  if (item.peopleCount !== undefined && (!Number.isInteger(item.peopleCount) || item.peopleCount < 1 || item.peopleCount > 100)) return false;
+  if (item.placeTimes !== undefined && (!Array.isArray(item.placeTimes) || item.placeTimes.length !== item.placeIds.length || !item.placeTimes.every(validVisitTime))) return false;
   if (item.startDate !== undefined || item.endDate !== undefined) {
     try { if (typeof item.startDate !== "string" || typeof item.endDate !== "string" || tripDays(item.startDate, item.endDate) !== item.days) return false; }
     catch { return false; }

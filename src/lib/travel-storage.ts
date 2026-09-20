@@ -1,11 +1,11 @@
 export * from "@/lib/travel-data";
-import { parseTravelBackup, type TravelBackup, type SavedItinerary } from "@/lib/travel-data";
+import { parseTravelBackup, type TravelBackup, type SavedItinerary, type SavedTourPlace } from "@/lib/travel-data";
 import type { RecentView } from "@/lib/travel-mutations";
 
 // In-memory display cache only. Firestore is the sole persistent store.
 let owner = "guest", revision = -1;
 let backup: TravelBackup | null = null;
-let spotsSnapshot = "[]", tripsSnapshot = "[]", viewsSnapshot = "[]";
+let spotsSnapshot = "[]", tripsSnapshot = "[]", viewsSnapshot = "[]", toursSnapshot = "[]";
 let state = "idle", message = "";
 const listeners = new Set<() => void>();
 let loading: Promise<void> | null = null;
@@ -17,7 +17,7 @@ export const isTravelSignedIn = () => uid() !== "guest";
 const notify = () => listeners.forEach((listener) => listener());
 function reset(next: string) {
   owner = next; revision = -1; backup = null;
-  spotsSnapshot = tripsSnapshot = viewsSnapshot = "[]";
+  spotsSnapshot = tripsSnapshot = viewsSnapshot = toursSnapshot = "[]";
 }
 function accept(data: { uid: string; revision: number; backup: TravelBackup; recentViews?: RecentView[] }, expected: string) {
   if (data.uid !== expected || uid() !== expected) throw new Error("로그인 계정이 변경되었습니다. 새로고침해 주세요.");
@@ -25,6 +25,7 @@ function accept(data: { uid: string; revision: number; backup: TravelBackup; rec
   backup = parseTravelBackup(JSON.stringify(data.backup)); revision = data.revision;
   spotsSnapshot = JSON.stringify(backup.spots); tripsSnapshot = JSON.stringify(backup.itineraries);
   viewsSnapshot = JSON.stringify(data.recentViews ?? []);
+  toursSnapshot = JSON.stringify(backup.tourPlaces ?? []);
 }
 function fail(error: unknown) {
   state = "error"; message = error instanceof Error ? error.message : "Firebase 연결을 확인해 주세요."; notify();
@@ -41,7 +42,8 @@ export async function refreshTravel(): Promise<void> {
     try {
       const response = await fetch("/api/account/travel", { cache: "no-store" });
       const data = await response.json();
-      if (!response.ok) { if (response.status === 401) reset(expected); throw new Error(data.message); }
+      if (generation !== mutationGeneration || uid() !== expected) return;
+      if (!response.ok) { if (response.status === 401 && uid() === expected) reset(expected); throw new Error(data.message); }
       if (generation !== mutationGeneration) return;
       accept(data, expected); state = "ready"; message = "Firebase에 연결됨"; notify();
     } catch (error) { if (generation === mutationGeneration) fail(error); }
@@ -69,6 +71,14 @@ export const getEmptySnapshot = () => "[]";
 export const getSavedSpotsSnapshot = () => owner === uid() ? spotsSnapshot : "[]";
 export const getItinerariesSnapshot = () => owner === uid() ? tripsSnapshot : "[]";
 export const getRecentViewsSnapshot = () => owner === uid() ? viewsSnapshot : "[]";
+export const getTourPlacesSnapshot = () => owner === uid() ? toursSnapshot : "[]";
+export const hasLoadedTravel = () => owner === uid() && revision >= 0;
+export function setTravelIdentity(next: string) {
+  document.documentElement.dataset.userScope = next;
+  reset(next); state = next === "guest" ? "guest" : "idle"; message = ""; mutationGeneration++; notify();
+  const pending = loading;
+  if (pending) void pending.finally(() => refreshTravel()); else void refreshTravel();
+}
 export const getTravelStatus = () => JSON.stringify({ state, message });
 export const getTravelServerStatus = () => '{"state":"idle","message":"Firebase 자료를 확인하는 중…"}';
 
@@ -85,7 +95,7 @@ async function mutate(action: unknown) {
       const data = await response.json();
       if (!response.ok) { if (response.status === 401) reset(expected); throw new Error(data.message); }
       accept(data, expected); state = "ready"; message = "Firebase에 저장되었습니다."; notify();
-    } catch (error) { fail(error); throw error; }
+    } catch (error) { if (uid() === expected) fail(error); throw error; }
   };
   const pending = queue.then(run, run);
   queue = pending.catch(() => undefined);
@@ -97,6 +107,7 @@ export const removeSavedItinerary = (id: string) => mutate({ type: "remove-itine
 export const recordViewedSpot = (id: string) => mutate({ type: "view", id });
 export const clearRecentViews = () => mutate({ type: "clear-views" });
 export const removeRecentViews = (ids: string[]) => mutate({ type: "remove-views", ids });
+export const setTourPlaceSaved = (place: SavedTourPlace, saved: boolean) => mutate({ type: "tour-spot", place, saved });
 export async function restoreTravelBackup(incoming: TravelBackup) { await mutate({ type: "import", backup: parseTravelBackup(JSON.stringify(incoming)) }); }
 export function createTravelBackup() {
   if (owner !== uid() || !backup || state === "error") throw new Error("Firebase 자료를 먼저 불러와 주세요.");

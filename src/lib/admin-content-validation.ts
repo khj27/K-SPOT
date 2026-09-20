@@ -1,6 +1,7 @@
 import { exploreTypes } from "@/mocks/explore-data";
 import type { AdminContentValidation, ContentStatus } from "@/types/admin-content";
 import type { ContentType } from "@/types/content";
+import { PLACE_CATEGORIES, type PlaceCategory } from "@/lib/place-categories";
 
 const contentTypes = exploreTypes.filter((type): type is ContentType => type !== "전체");
 const statuses: ContentStatus[] = ["draft", "published"];
@@ -49,10 +50,12 @@ export function validateAdminContentSpot(value: unknown, options: { allowIncompl
   if (imageUrl && !isHttpUrl(imageUrl)) errors.imageUrl = "http 또는 https 주소를 입력해 주세요.";
   const imageRights = text("imageRights", "이미지 출처·사용 근거", false, 200);
   const status = text("status", "공개 상태") as ContentStatus;
+  const placeCategory = (text("placeCategory", "장소 유형", false) || "기타") as PlaceCategory;
+  if (!PLACE_CATEGORIES.includes(placeCategory)) errors.placeCategory = "장소 유형을 선택해 주세요.";
   if (!statuses.includes(status)) errors.status = "공개 상태를 선택해 주세요.";
 
   if (Object.keys(errors).length > 0) return { errors };
-  return { errors, data: { slug, contentTitle, contentType, creator, releaseYear, episode, description, spotName, region, address, latitude, longitude, sourceUrl, sourceLabel, verifiedAt, imageUrl, imageRights, status } };
+  return { errors, data: { slug, contentTitle, contentType, placeCategory, creator, releaseYear, episode, description, spotName, region, address, latitude, longitude, sourceUrl, sourceLabel, verifiedAt, imageUrl, imageRights, status } };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

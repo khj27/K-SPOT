@@ -1,29 +1,32 @@
 "use client";
+import { useTravelSnapshot } from "@/components/account/travel-snapshot-provider";
 import { useTranslation } from "@/components/common/locale-provider";
 
 import { LocaleText } from "@/components/common/locale-provider";
 
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
 import { AppIcon } from "@/components/common/app-icon";
 import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import type { ExploreContent } from "@/types/content";
-import { subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot, parseSavedSpotIds, setSpotSaved } from "@/lib/travel-storage";
+import { parseSavedSpotIds, setSpotSaved } from "@/lib/travel-storage";
 
 export function SavedSpotsList({ contents }: { contents: ExploreContent[] }) {
   const { t } = useTranslation();
 
   const [error, setError] = useState("");
-  const savedSpotsSnapshot = useSyncExternalStore(subscribeToSavedSpots, getSavedSpotsSnapshot, getEmptySnapshot);
+  const savedSpotsSnapshot = useTravelSnapshot("spots");
   const savedIds = parseSavedSpotIds(savedSpotsSnapshot);
+  const tours = useTravelSnapshot("tours");
 
   const savedContents = savedIds
     .map((id) => contents.find((content) => content.id === id))
     .filter((content): content is ExploreContent => content !== undefined);
   const unavailable = savedIds.filter((id) => !contents.some((content) => content.id === id));
 
+  if (savedIds.length === 0 && JSON.parse(tours).length > 0) return null;
   if (savedIds.length === 0) {
     return (
       <section className="saved-empty">

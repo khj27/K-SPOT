@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     const decoded = await auth.verifyIdToken(body.idToken, true);
     if (Math.abs(Date.now() / 1000 - decoded.auth_time) > 300) return NextResponse.json({ message: "다시 로그인해 주세요." }, { status: 401 });
     const session = await auth.createSessionCookie(body.idToken, { expiresIn: USER_MAX_AGE * 1000 });
-    const response = NextResponse.json({ ok: true });
+    const response = NextResponse.json({ ok: true, user: { uid: decoded.uid, email: decoded.email ?? "", name: typeof decoded.name === "string" ? decoded.name : "" } });
     response.cookies.set(USER_COOKIE, session, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: USER_MAX_AGE });
     return response;
   } catch { return NextResponse.json({ message: "로그인하지 못했습니다. 다시 시도해 주세요." }, { status: 401 }); }

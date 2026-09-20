@@ -6,6 +6,7 @@ import { getFirebaseAdminDb, isFirebaseAdminConfigured } from "@/lib/firebase/ad
 import { contentThumbnail } from "@/lib/content-thumbnail";
 import type { AdminContentSpot, AdminContentSpotInput } from "@/types/admin-content";
 import type { ContentType, DemoMapPosition, ExploreContent } from "@/types/content";
+import { PLACE_CATEGORIES, type PlaceCategory } from "@/lib/place-categories";
 
 const COLLECTION = "contentSpots";
 
@@ -49,6 +50,7 @@ function serializeAdminContent(id: string, data: Record<string, unknown>): Admin
   const toIso = (value: unknown) => value instanceof Timestamp ? value.toDate().toISOString() : typeof value === "string" ? value : "";
   return {
     id,
+    placeCategory: PLACE_CATEGORIES.includes(data.placeCategory as PlaceCategory) ? data.placeCategory as PlaceCategory : "기타",
     slug: String(data.slug ?? id),
     contentTitle: String(data.contentTitle ?? ""),
     contentType: data.contentType as ContentType,
@@ -81,6 +83,7 @@ function toExploreContent(item: AdminContentSpot): ExploreContent {
   const tones: Record<ContentType, DemoMapPosition["tone"]> = { 드라마: "purple", 예능: "blue", 영화: "orange", 뮤직비디오: "red", 아이돌: "teal", "웹툰/웹소설": "green" };
   return {
     id: item.slug,
+    placeCategory: item.placeCategory ?? "기타",
     title: item.contentTitle,
     type: item.contentType,
     region: item.region,

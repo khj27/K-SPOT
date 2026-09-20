@@ -1,20 +1,22 @@
 "use client";
+import { useTravelSnapshot } from "@/components/account/travel-snapshot-provider";
 import { useTranslation } from "@/components/common/locale-provider";
 
 import { LocaleText } from "@/components/common/locale-provider";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import type { ExploreContent } from "@/types/content";
 import type { RecentView } from "@/lib/travel-mutations";
-import { getEmptySnapshot, getItinerariesSnapshot, getSavedSpotsSnapshot, getRecentViewsSnapshot, parseItineraries, parseSavedSpotIds, subscribeToTravel, removeRecentViews } from "@/lib/travel-storage";
+import { parseItineraries, parseSavedSpotIds, removeRecentViews } from "@/lib/travel-storage";
 
 export function TravelDashboard({ contents }: { contents: ExploreContent[] }) {
   const { t } = useTranslation();
 
-  const spots = parseSavedSpotIds(useSyncExternalStore(subscribeToTravel, getSavedSpotsSnapshot, getEmptySnapshot));
-  const trips = parseItineraries(useSyncExternalStore(subscribeToTravel, getItinerariesSnapshot, getEmptySnapshot));
-  const recent = JSON.parse(useSyncExternalStore(subscribeToTravel, getRecentViewsSnapshot, getEmptySnapshot)) as RecentView[];
+  const spots = parseSavedSpotIds(useTravelSnapshot("spots"));
+  const tours = JSON.parse(useTravelSnapshot("tours")) as unknown[];
+  const trips = parseItineraries(useTravelSnapshot("trips"));
+  const recent = JSON.parse(useTravelSnapshot("views")) as RecentView[];
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
@@ -28,7 +30,7 @@ export function TravelDashboard({ contents }: { contents: ExploreContent[] }) {
     finally { setBusy(false); }
   }
   return <div className="travel-dashboard">
-    <section className="travel-stats" aria-label={t("나의 저장 현황")}><Link href="/saved"><span><LocaleText>{"저장한 장소"}</LocaleText></span><strong>{spots.length}<LocaleText>{"개"}</LocaleText></strong></Link><Link href="/saved"><span><LocaleText>{"저장한 일정"}</LocaleText></span><strong>{trips.length}<LocaleText>{"개"}</LocaleText></strong></Link></section>
+    <section className="travel-stats" aria-label={t("나의 저장 현황")}><Link href="/mypage#saved-places"><span><LocaleText>{"찜한 장소"}</LocaleText></span><strong>{spots.length + tours.length}<LocaleText>{"개"}</LocaleText></strong></Link><Link href="/saved"><span><LocaleText>{"저장한 일정"}</LocaleText></span><strong>{trips.length}<LocaleText>{"개"}</LocaleText></strong></Link></section>
     <div className="ui-actions"><Link className="kspot-primary-button" href="/saved"><LocaleText>{"저장한 여행 보기"}</LocaleText></Link><Link className="ui-button" href="/planner"><LocaleText>{"새 일정 만들기"}</LocaleText></Link></div>
     <section className="travel-backup"><h2><LocaleText>{"최근 본 장소"}</LocaleText></h2><p><LocaleText>{"최근 둘러본 장소를 다시 찾아보세요. 지울 기록을 선택할 수 있습니다."}</LocaleText></p>
       {recent.length ? <>

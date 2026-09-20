@@ -6,8 +6,12 @@ import { LocaleText } from "@/components/common/locale-provider";
 import { useState } from "react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut } from "firebase/auth";
 import { getFirebaseUserAuth } from "@/lib/firebase/client";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/account/auth-provider";
 
 export function UserLoginForm({ configured }: { configured: boolean }) {
+  const router = useRouter();
+  const { updateUser } = useAuth();
   const { t } = useTranslation();
 
   const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
@@ -32,10 +36,9 @@ export function UserLoginForm({ configured }: { configured: boolean }) {
       if (created) await updateProfile(credential.user, { displayName: String(form.get("name")).trim() });
       const response = await fetch("/api/account/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idToken: await credential.user.getIdToken(true) }) });
       if (!response.ok) throw Object.assign(new Error("SESSION_FAILED"), { code: "session/failed" });
+      updateUser((await response.json()).user);
       await signOut(auth);
-      // A full navigation resets the document's per-account local-storage scope.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign("/mypage");
+      router.replace("/mypage"); router.refresh();
     } catch (error) {
       const code = (error as { code?: string }).code;
       const details: Record<string, string> = {

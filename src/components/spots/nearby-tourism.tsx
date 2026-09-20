@@ -2,6 +2,8 @@
 import { LocaleText } from "@/components/common/locale-provider";
 
 
+import Link from "next/link";
+import { TourBookmarkButton } from "@/components/spots/tour-bookmark-button";
 import { useEffect, useState } from "react";
 
 import { ContentThumbnail } from "@/components/common/content-thumbnail";
@@ -40,7 +42,7 @@ export function NearbyTourism({ latitude, longitude }: NearbyTourismProps) {
       </div>
       {loading ? <p className="nearby-tourism-state"><LocaleText>{"한국관광공사 주변 관광정보를 불러오는 중입니다…"}</LocaleText></p> : data && data.items.length > 0 ? (
         <div className="nearby-tourism-list">
-          {data.items.map((place) => <article key={place.contentId}><div className="tourism-photo"><ContentThumbnail src={place.thumbnailUrl || place.imageUrl} title={place.title} /></div><div><h3><a href={`https://map.kakao.com/link/map/${encodeURIComponent(place.title)},${place.latitude},${place.longitude}`} target="_blank" rel="noreferrer">{place.title}</a></h3><p><LocaleText>{place.address || "주소 정보 확인 중"}</LocaleText></p><span><LocaleText>{place.distanceMeters === undefined ? "주변 관광지" : `${place.distanceMeters.toLocaleString("ko-KR")}m 거리`}</LocaleText></span></div></article>)}
+          {data.items.map((place) => <article key={place.contentId}><div className="tourism-photo"><ContentThumbnail src={place.thumbnailUrl || place.imageUrl} title={place.title} /></div><div><h3><Link href={`/tour-spots/${place.contentId}`}>{place.title}</Link></h3><p><LocaleText>{place.address || "주소 정보 확인 중"}</LocaleText></p><span><LocaleText>{place.distanceMeters === undefined ? "주변 관광지" : `${place.distanceMeters.toLocaleString("ko-KR")}m 거리`}</LocaleText></span><TourBookmarkButton place={{ contentId: place.contentId, title: place.title, address: place.address, latitude: place.latitude, longitude: place.longitude, contentTypeId: place.contentTypeId, ...(place.thumbnailUrl || place.imageUrl ? { imageUrl: place.thumbnailUrl || place.imageUrl } : {}) }} /></div></article>)}
         </div>
       ) : <div className="nearby-tourism-empty"><AppIcon name="map" size={24} /><div><strong><LocaleText>{"주변 즐길거리를 찾지 못했습니다."}</LocaleText></strong><p><LocaleText>{data?.message}</LocaleText></p></div></div>}
       <p className="tourapi-evidence"><LocaleText>{"한국관광공사 국문 관광정보 서비스 · locationBasedList2 · 반경 5km"}</LocaleText></p>

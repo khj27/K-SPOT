@@ -4,6 +4,7 @@ export const contentStatuses = ["draft", "published"] as const;
 export type ContentStatus = (typeof contentStatuses)[number];
 
 export type AdminContentSpotInput = {
+  placeCategory?: import("@/lib/place-categories").PlaceCategory;
   slug: string;
   contentTitle: string;
   contentType: ContentType;

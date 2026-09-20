@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ContentThumbnail } from "@/components/common/content-thumbnail";
 import { contentThumbnail } from "@/lib/content-thumbnail";
+import { PLACE_CATEGORIES } from "@/lib/place-categories";
 
 import { exploreTypes } from "@/mocks/explore-data";
 import type { AdminContentSpot } from "@/types/admin-content";
@@ -68,6 +69,7 @@ export function AdminContentForm({ initial }: Props) {
         <div className="admin-form-grid">
           <label><span>장소명 *</span><input name="spotName" defaultValue={initial?.spotName} required />{field("spotName")}</label>
           <label><span>지역 *</span><input name="region" defaultValue={initial?.region} placeholder="예: 부산" required />{field("region")}</label>
+          <label><span>장소 유형</span><select name="placeCategory" defaultValue={initial?.placeCategory ?? "기타"}>{PLACE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}</select><small>홈 지도 장소 유형 필터에 사용됩니다. 미분류 자료는 기타로 표시합니다.</small>{field("placeCategory")}</label>
           <label className="admin-field-wide"><span>주소 *</span><input name="address" defaultValue={initial?.address} required />{field("address")}</label>
           <label><span>위도 *</span><input name="latitude" type="number" step="any" defaultValue={initial?.latitude ?? ""} placeholder="35.1532" required />{field("latitude")}</label>
           <label><span>경도 *</span><input name="longitude" type="number" step="any" defaultValue={initial?.longitude ?? ""} placeholder="129.1186" required />{field("longitude")}</label>

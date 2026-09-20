@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import type { UserIdentity } from "@/lib/firebase/user-session";
 import { parseTravelBackup, restoreTravelBackup } from "@/lib/travel-storage";
+import { useAuth } from "@/components/account/auth-provider";
 
-export function AccountPanel({ user, children }: { user: UserIdentity | null; children?: ReactNode }) {
+export function AccountPanel({ children }: { user: UserIdentity | null; children?: ReactNode }) {
+  const { user, logout: signOut } = useAuth();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   if (!user) return <section className="travel-backup account-panel"><h2><LocaleText>{"로그인하고 여행 저장하기"}</LocaleText></h2><p><LocaleText>{"마음에 드는 장소와 일정을 저장하고 다른 기기에서도 이어서 여행을 준비하세요."}</LocaleText></p><Link className="kspot-primary-button" href="/login"><LocaleText>{"로그인 / 회원가입"}</LocaleText></Link></section>;
@@ -24,11 +26,7 @@ export function AccountPanel({ user, children }: { user: UserIdentity | null; ch
   async function logout() {
     setBusy(true);
     try {
-      const response = await fetch("/api/account/session", { method: "DELETE" });
-      if (!response.ok) throw new Error();
-      // Discard the in-memory account cache on logout.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign("/mypage");
+      await signOut();
     } catch { setMessage("로그아웃하지 못했습니다."); setBusy(false); }
   }
   return <div className="account-layout">

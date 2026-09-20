@@ -3,6 +3,61 @@ export type Locale = "ko" | "en";
 // Stored content, filter values and account data remain in their original language.
 // This catalogue translates presentation only, without sending user data to a service.
 const entries = `
+여행 일정 관리|Manage trips
+여행 제목|Trip title
+여행 인원|Travelers
+명| travelers
+일|days
+나의 여행 일정|My itinerary
+시작 시간|Start time
+종료 시간|End time
+이 일정의 장소 지도|Map of this itinerary
+현재 일정에 포함된 장소만 순서대로 표시합니다.|Only the places in this itinerary are shown, in order.
+일정에 장소를 추가해 주세요.|Add a place to your itinerary.
+여행 인원은 1~100명으로 입력해 주세요.|Enter between 1 and 100 travelers.
+시작·종료 시간을 모두 입력하고 종료 시간을 더 늦게 설정해 주세요.|Enter both times, with the end later than the start.
+여행 일정이 저장되었습니다.|Your itinerary has been saved.
+여행 일정 저장에 실패했습니다. 다시 시도해주세요.|Unable to save the itinerary. Please try again.
+정말 이 여행 일정을 삭제하시겠습니까?|Delete this itinerary?
+삭제한 일정은 되돌릴 수 없습니다.|This action cannot be undone.
+취소|Cancel
+저장한 여행 일정이 없습니다.|No saved itineraries yet.
+저장한 일정의 제목·인원·시간과 장소를 관리하세요.|Manage the title, travelers, times and places in your saved trips.
+주변 관광지 찾아 담기|Find nearby attractions
+찜하기|Save place
+찜됨|Saved
+찜한 장소에 추가되었습니다.|Added to your saved places.
+찜한 장소에서 삭제되었습니다.|Removed from your saved places.
+콘텐츠 제보|Suggest a place
+내 취향의 촬영지에서 나만의 여행까지|From favorite scenes to your own adventure
+지도에서 장소를 찾고, 추천 코스를 편집해 저장하세요. 마음에 든 장소는 마이페이지에 모아둘 수 있어요.|Explore the map, customize an itinerary and save your trip. Keep favorite places on My page.
+장소 유형|Place category
+관광지|Attractions
+음식점|Restaurants
+문화시설|Culture
+숙박|Accommodation
+축제·행사|Festivals & events
+쇼핑|Shopping
+기타|Other
+레포츠|Outdoor activities
+여행코스|Tour routes
+이전|Previous
+다음|Next
+콘텐츠 제보가 접수되었습니다.|Your suggestion has been received.
+관리자가 내용을 확인한 뒤 등록 여부를 검토합니다.|An administrator will review your suggestion before publication.
+다른 장소 제보하기|Suggest another place
+장소명 / 콘텐츠명|Place / content name
+카테고리|Category
+간단한 설명|Brief description
+관련 URL|Related URL (optional)
+추가 요청 사유|Reason for your suggestion
+기타 의견|Other comments (optional)
+제보 보내기|Submit suggestion
+아직 소개되지 않은 장소나 콘텐츠를 알려주세요.|Tell us about a place or content we haven't featured yet.
+로그인 후 이용해 주세요.|Please log in to continue.
+필수 항목과 관련 URL을 확인해 주세요.|Check the required fields and related URL.
+제보를 저장하지 못했습니다. 다시 시도해 주세요.|Unable to submit. Please try again.
+상세정보를 잠시 불러올 수 없습니다.|Details are temporarily unavailable.
 데모|Demo
 데모 데이터 · 공개 전 검수 필요|Demo data · Verification required
 현재 장소 정보는 화면 기능 검증을 위한 데모 데이터입니다. 공개 전 공식 관광 정보와 촬영 출처를 확인합니다.|This is demo data pending verification.

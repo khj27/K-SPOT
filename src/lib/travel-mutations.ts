@@ -1,4 +1,4 @@
-import { parseTravelBackup, type TravelBackup } from "@/lib/travel-data";
+import { parseTravelBackup, parseTourPlace, type TravelBackup } from "@/lib/travel-data";
 
 export type RecentView = { spotId: string; viewedAt: string };
 export type TravelDocument = { backup: TravelBackup; recentViews: RecentView[]; revision: number };
@@ -15,6 +15,13 @@ export function applyTravelMutation(current: TravelDocument, value: unknown): Tr
     return value;
   };
   switch (action.type) {
+    case "tour-spot": {
+      if (typeof action.saved !== "boolean") throw new Error("INVALID_SAVED");
+      const place = parseTourPlace(action.place);
+      const others = (backup.tourPlaces ?? []).filter((item) => item.contentId !== place.contentId);
+      backup.tourPlaces = action.saved ? [...others, place] : others;
+      break;
+    }
     case "spot": {
       const spot = id(action.id);
       if (typeof action.saved !== "boolean") throw new Error("INVALID_SAVED");
@@ -51,6 +58,8 @@ export function applyTravelMutation(current: TravelDocument, value: unknown): Tr
       const ids = new Set(backup.itineraries.map((item) => item.id));
       backup.spots = [...new Set([...backup.spots, ...incoming.spots])];
       backup.itineraries = [...backup.itineraries, ...incoming.itineraries.filter((item) => !ids.has(item.id))];
+      const tourIds = new Set((backup.tourPlaces ?? []).map((item) => item.contentId));
+      if (incoming.tourPlaces) backup.tourPlaces = [...(backup.tourPlaces ?? []), ...incoming.tourPlaces.filter((item) => !tourIds.has(item.contentId))];
       break;
     }
     default: throw new Error("INVALID_ACTION");

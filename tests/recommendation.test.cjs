@@ -7,7 +7,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const source = fs.readFileSync(path.join(__dirname, '../src/lib/recommendation.ts'), 'utf8');
 const api = {};
-vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports: api });
+vm.runInNewContext(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, { exports: api, require: () => require('./load-ts.cjs')('src/lib/regions.ts') });
 const places = [{ id: 'seoul', region: '서울특별시 종로구', type: '영화', spotName: '서울 장소' }, { id: 'busan', region: '부산광역시', type: '드라마', spotName: '부산 장소' }];
 test('full administrative region names match short selection and no capital bonus', () => {
   const result = api.rankPlaces({ places, region: '서울', selectedTypes: new Set(['영화']) });

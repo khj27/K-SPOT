@@ -12,6 +12,7 @@ export type DemoMapPosition = {
 };
 
 export type ExploreContent = {
+  placeCategory?: import("@/lib/place-categories").PlaceCategory;
   id: string;
   title: string;
   type: ContentType;
