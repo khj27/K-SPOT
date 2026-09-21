@@ -7,8 +7,8 @@ import "./kspot.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "로컬리 | K-콘텐츠 로컬 여행",
-    template: "%s | 로컬리",
+    default: "K-SPOT | K-콘텐츠 로컬 여행",
+    template: "%s | K-SPOT",
   },
   description: "K-콘텐츠와 함께 발견하는 비수도권 로컬 여행 플래너",
 };
