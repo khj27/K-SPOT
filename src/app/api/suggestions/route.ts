@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ message: "로그인 후 이용해 주세요." }, { status: 401 });
   let suggestion;
   try { suggestion = parseSuggestion(await readAccountJson(request, 16_000)); }
-  catch { return NextResponse.json({ message: "필수 항목과 관련 URL을 확인해 주세요." }, { status: 400 }); }
+  catch { return NextResponse.json({ message: "장소명 / 콘텐츠명과 입력한 항목의 글자 수·URL을 확인해 주세요." }, { status: 400 }); }
   try {
     const db = getFirebaseAdminDb();
     const ref = db.collection("contentSuggestions").doc(`${user.uid}_${suggestion.id}`);

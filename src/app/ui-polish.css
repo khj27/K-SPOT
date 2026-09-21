@@ -14,6 +14,12 @@
 .paginated-content-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pagination{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin:30px 0}.pagination a,.pagination>span{display:grid;place-items:center;min-width:38px;min-height:40px;padding:7px 10px;border-radius:8px;border:1px solid #e2dcee;font-size:14px}.pagination a[aria-current=page]{background:#6549da;color:white}.pagination>span{opacity:.4}
 .tour-bookmark{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px}.tour-bookmark span{font-size:12px;line-height:1.5}.tour-bookmark button[aria-pressed=true]{background:#eee8ff;color:#6346d0}.nearby-tourism-list .tour-bookmark{grid-column:1/-1}.tour-detail-photo{position:relative;height:260px;overflow:hidden;border-radius:12px;margin-bottom:20px}
 .suggestion-form{gap:20px}.suggestion-form textarea{resize:vertical}.suggestion-form .trip-metadata{margin:0}.admin-guide-card dd{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0 20px}
+.suggestion-help{margin:0;color:var(--kspot-muted);font-size:14px;line-height:1.7}
+.suggestion-details{min-width:0;border:1px solid #e5dfef;border-radius:12px;padding:16px}
+.suggestion-details summary{cursor:pointer;color:#655a76;font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.suggestion-details-fields{display:grid;gap:20px;margin-top:20px}
+.suggestion-details .trip-metadata{grid-template-columns:repeat(2,minmax(0,1fr));padding:0;border:0}
+@media(max-width:640px){.suggestion-details .trip-metadata{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:1000px){.paginated-content-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.paginated-content-grid{grid-template-columns:1fr}.trip-metadata{grid-template-columns:1fr}.home-intro{padding:20px}.home-intro h1{font-size:25px}.itinerary-map{height:260px}.pagination{gap:4px}.pagination a,.pagination>span{min-width:30px;padding:6px}.visit-time-fields{gap:8px}}
 .language-selector{display:flex;align-items:center;flex-shrink:0}

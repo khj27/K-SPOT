@@ -47,6 +47,21 @@ test('suggestions validate required fields and URL and discard supplied ownershi
   assert.equal(parseSuggestion({ ...suggestion, uid: 'forged' }).uid, undefined);
   for (const changes of [{ title: '' }, { relatedUrl: 'javascript:alert(1)' }, { relatedUrl: 'https://user:pass@example.com' }, { category: 'unknown' }]) assert.throws(() => parseSuggestion({ ...suggestion, ...changes }));
 });
+test('suggestions accept a name alone and keep unknown details empty', () => {
+  const { parseSuggestion } = load('src/lib/content-suggestions.ts');
+  const minimal = { id: suggestion.id, title: '  아이브 안유진 콘텐츠  ' };
+  const parsed = parseSuggestion(minimal);
+  assert.equal(parsed.title, '아이브 안유진 콘텐츠');
+  for (const field of ['category', 'region', 'address', 'description', 'reason', 'comments', 'relatedUrl']) {
+    assert.equal(parsed[field], '');
+    assert.equal(parseSuggestion({ ...minimal, [field]: '   ' })[field], '');
+  }
+  for (const title of ['', '   ', 'x'.repeat(121)]) assert.throws(() => parseSuggestion({ ...minimal, title }));
+  for (const [field, max] of [['category', 30], ['region', 60], ['address', 240], ['description', 1000], ['reason', 1000], ['comments', 1000], ['relatedUrl', 1000]]) {
+    assert.throws(() => parseSuggestion({ ...minimal, [field]: 'x'.repeat(max + 1) }));
+  }
+  assert.equal(parseSuggestion({ ...minimal, comments: '  더 많은 콘텐츠를 보고 싶어요  ' }).comments, '더 많은 콘텐츠를 보고 싶어요');
+});
 test('suggestion endpoint rejects guests, foreign origins and failures; retries are idempotent', async () => {
   let user = null, sameOrigin = true, fail = false, stored = null, writes = 0;
   const route = load('src/app/api/suggestions/route.ts', {
@@ -55,10 +70,15 @@ test('suggestion endpoint rejects guests, foreign origins and failures; retries 
     '@/lib/account-validation': { isSameOrigin: () => sameOrigin, readAccountJson: request => request.json() },
     '@/lib/firebase/admin': { getFirebaseAdminDb: () => ({ collection: () => ({ doc: id => { assert.ok(id.startsWith('alice_')); return id; } }), runTransaction: async fn => { if (fail) throw new Error(); await fn({ get: async () => ({ exists: !!stored }), create: (_, value) => { stored = value; writes++; } }); } }) },
   });
-  const request = () => new Request('https://example.com/api/suggestions', { method: 'POST', body: JSON.stringify(suggestion) });
+  const request = (payload = suggestion) => new Request('https://example.com/api/suggestions', { method: 'POST', body: JSON.stringify(payload) });
   assert.equal((await route.POST(request())).status, 401);
   user = { uid: 'alice' }; sameOrigin = false; assert.equal((await route.POST(request())).status, 403);
   sameOrigin = true; fail = true; assert.equal((await route.POST(request())).status, 503);
-  fail = false; assert.equal((await route.POST(request())).status, 200); assert.equal((await route.POST(request())).status, 200);
+  fail = false;
+  assert.equal((await route.POST(request({ id: suggestion.id, title: '   ' }))).status, 400);
+  assert.equal(writes, 0);
+  const minimal = { id: suggestion.id, title: '아이브 안유진 콘텐츠' };
+  assert.equal((await route.POST(request(minimal))).status, 200); assert.equal((await route.POST(request(minimal))).status, 200);
   assert.equal(writes, 1); assert.equal(stored.uid, 'alice'); assert.equal(stored.status, 'pending');
+  assert.equal(stored.title, minimal.title); assert.equal(stored.address, ''); assert.equal(stored.reason, '');
 });

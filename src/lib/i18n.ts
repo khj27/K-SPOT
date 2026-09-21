@@ -72,6 +72,20 @@ const entries = `
 관리자가 내용을 확인한 뒤 등록 여부를 검토합니다.|An administrator will review your suggestion before publication.
 다른 장소 제보하기|Suggest another place
 장소명 / 콘텐츠명|Place / content name
+장소명 / 콘텐츠명 (필수)|Place / content name (required)
+장소명이나 콘텐츠명만 적어도 제보할 수 있어요. 나머지는 아는 내용만 자유롭게 알려주세요.|Just a place or content name is enough. Share any other details you know.
+예: 아이브 안유진 콘텐츠|e.g. Content featuring IVE's An Yujin
+어떤 콘텐츠나 장소인지, 추가되었으면 하는 내용을 편하게 적어주세요.|Tell us about the content or place, or what you would like us to add.
+간단한 설명 (선택)|Brief description (optional)
+추가 정보 남기기 (모두 선택)|Add more details (all optional)
+카테고리 (선택)|Category (optional)
+지역 (선택)|Region (optional)
+주소 (선택)|Address (optional)
+관련 URL (선택)|Related URL (optional)
+추가 요청 사유 (선택)|Reason for your suggestion (optional)
+기타 의견 (선택)|Other comments (optional)
+선택하지 않음|Not selected
+장소명 / 콘텐츠명과 입력한 항목의 글자 수·URL을 확인해 주세요.|Check the place / content name, field lengths and any URL you entered.
 카테고리|Category
 간단한 설명|Brief description
 관련 URL|Related URL (optional)
