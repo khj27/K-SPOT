@@ -49,7 +49,7 @@ export function SavedSpotsList({ contents }: { contents: ExploreContent[] }) {
       {savedContents.map((content) => (
         <article className="saved-content-card" key={content.id}>
           <Link href={`/spots/${content.id}`} className={`saved-content-visual visual-${content.visual}`}>
-            <span><LocaleText>{content.type}</LocaleText></span><ContentThumbnail src={content.imageUrl} title={content.title} /><small>{content.episode}</small>
+            <span><LocaleText>{content.type}</LocaleText></span><ContentThumbnail src={content.imageUrl} title={content.title} />
           </Link>
           <div className="saved-content-body">
             <p><AppIcon name="pin" size={14} /> {content.region} · {content.spotName}</p>

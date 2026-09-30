@@ -86,7 +86,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       {contents.length > 0 ? (
         <div className="explore-result-grid paginated-content-grid">
           {pagination.items.map((content) => <Link className="explore-content-card" href={`/spots/${content.id}`} key={content.id}>
-            <div className={`explore-card-visual visual-${content.visual}`}><span><LocaleText>{content.type}</LocaleText></span><ContentThumbnail src={content.imageUrl} title={content.title} /><small>{content.episode}</small></div>
+            <div className={`explore-card-visual visual-${content.visual}`}><span><LocaleText>{content.type}</LocaleText></span><ContentThumbnail src={content.imageUrl} title={content.title} /></div>
             <div className="explore-card-body"><p><AppIcon name="pin" size={14} /> {content.region} · {content.spotName}</p><h2>{content.title}</h2><span>{content.description}</span><b><LocaleText>{"장소 상세 보기 "}</LocaleText><AppIcon name="arrow" size={14} /></b></div>
           </Link>)}
         </div>
