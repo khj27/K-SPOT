@@ -271,3 +271,21 @@ button:disabled{cursor:not-allowed;opacity:.55}
   }
   .spot-action { flex-basis: 120px; }
 }
+
+/* Keep map filters evenly spaced and both category rows the same size. */
+.map-explorer { display: grid; gap: 16px; min-width: 0; }
+.map-filter-panel + .map-explorer { margin-top: 16px; }
+.map-explorer > .map-category-filter,
+.map-explorer > .map-color-legend,
+.map-explorer > .map-explorer-layout { margin: 0; }
+.map-explorer > :is(.map-category-filter, .map-color-legend) button {
+  box-sizing: border-box;
+  flex: 0 0 128px;
+  width: 128px;
+  height: 44px;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 22px;
+  font-size: 13px;
+  line-height: 16px;
+}
